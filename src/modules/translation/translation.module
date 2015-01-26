@@ -84,7 +84,7 @@ function translation_menu() {
  * @see translation_menu()
  */
 function _translation_tab_access($node) {
-  if ($node->language != LANGUAGE_NONE && translation_supported_type($node->type) && node_access('view', $node)) {
+  if (entity_language('node', $node) != LANGUAGE_NONE && translation_supported_type($node->type) && node_access('view', $node)) {
     return user_access('translate content');
   }
   return FALSE;
@@ -233,7 +233,7 @@ function translation_node_view($node, $view_mode) {
     foreach ($translations as $langcode => $translation) {
       // Do not show links to the same node, to unpublished translations or to
       // translations in disabled languages.
-      if ($translation->status && isset($languages[$langcode]) && $langcode != $node->language) {
+      if ($translation->status && isset($languages[$langcode]) && $langcode != entity_language('node', $node)) {
         $language = $languages[$langcode];
         $key = "translation_$langcode";
 
@@ -313,7 +313,7 @@ function translation_node_prepare($node) {
 
     // Add field translations and let other modules module add custom translated
     // fields.
-    field_attach_prepare_translation('node', $node, $node->language, $source_node, $source_node->language);
+    field_attach_prepare_translation('node', $node, $langcode, $source_node, $source_node->language);
   }
 }
 
@@ -336,9 +336,13 @@ function translation_node_insert($node) {
             'tnid' => $tnid,
             'translate' => 0,
           ))
-          ->condition('nid', $node->translation_source->nid)
+          ->condition('nid', $tnid)
           ->execute();
+
+        // Flush the (untranslated) source node from the load cache.
+        entity_get_controller('node')->resetCache(array($tnid));
       }
+
       db_update('node')
         ->fields(array(
           'tnid' => $tnid,
@@ -358,7 +362,8 @@ function translation_node_insert($node) {
 function translation_node_update($node) {
   // Only act if we are dealing with a content type supporting translations.
   if (translation_supported_type($node->type)) {
-    if (isset($node->translation) && $node->translation && !empty($node->language) && $node->tnid) {
+    $langcode = entity_language('node', $node);
+    if (isset($node->translation) && $node->translation && !empty($langcode) && $node->tnid) {
       // Update translation information.
       db_update('node')
         ->fields(array(
@@ -367,13 +372,23 @@ function translation_node_update($node) {
         ))
         ->condition('nid', $node->nid)
         ->execute();
+
       if (!empty($node->translation['retranslate'])) {
         // This is the source node, asking to mark all translations outdated.
-        db_update('node')
-          ->fields(array('translate' => 1))
+        $translations = db_select('node', 'n')
+          ->fields('n', array('nid'))
           ->condition('nid', $node->nid, '<>')
           ->condition('tnid', $node->tnid)
+          ->execute()
+          ->fetchCol();
+
+        db_update('node')
+          ->fields(array('translate' => 1))
+          ->condition('nid', $translations, 'IN')
           ->execute();
+
+        // Flush the modified translation nodes from the load cache.
+        entity_get_controller('node')->resetCache($translations);
       }
     }
   }
@@ -389,7 +404,8 @@ function translation_node_validate($node, $form) {
   if (translation_supported_type($node->type) && (!empty($node->tnid) || !empty($form['#node']->translation_source->nid))) {
     $tnid = !empty($node->tnid) ? $node->tnid : $form['#node']->translation_source->nid;
     $translations = translation_node_get_translations($tnid);
-    if (isset($translations[$node->language]) && $translations[$node->language]->nid != $node->nid ) {
+    $langcode = entity_language('node', $node);
+    if (isset($translations[$langcode]) && $translations[$langcode]->nid != $node->nid ) {
       form_set_error('language', t('There is already a translation in this language.'));
     }
   }
@@ -418,11 +434,16 @@ function translation_remove_from_set($node) {
         'tnid' => 0,
         'translate' => 0,
       ));
-    if (db_query('SELECT COUNT(*) FROM {node} WHERE tnid = :tnid', array(':tnid' => $node->tnid))->fetchField() == 1) {
+
+    // Determine which nodes to apply the update to.
+    $set_nids = db_query('SELECT nid FROM {node} WHERE tnid = :tnid', array(':tnid' => $node->tnid))->fetchCol();
+    if (count($set_nids) == 1) {
       // There is only one node left in the set: remove the set altogether.
       $query
         ->condition('tnid', $node->tnid)
         ->execute();
+
+      $flush_set = TRUE;
     }
     else {
       $query
@@ -437,8 +458,14 @@ function translation_remove_from_set($node) {
           ->fields(array('tnid' => $new_tnid))
           ->condition('tnid', $node->tnid)
           ->execute();
+
+        $flush_set = TRUE;
       }
     }
+
+    // Flush the modified nodes from the load cache.
+    $nids = !empty($flush_set) ? $set_nids : array($node->nid);
+    entity_get_controller('node')->resetCache($nids);
   }
 }
 
@@ -469,7 +496,8 @@ function translation_node_get_translations($tnid) {
         ->execute();
 
       foreach ($result as $node) {
-        $translations[$tnid][$node->language] = $node;
+        $langcode = entity_language('node', $node);
+        $translations[$tnid][$langcode] = $node;
       }
     }
     return $translations[$tnid];
@@ -523,10 +551,11 @@ function translation_language_switch_links_alter(array &$links, $type, $path) {
       // have translations it might be a language neutral node, in which case we
       // must leave the language switch links unaltered. This is true also for
       // nodes not having translation support enabled.
-      if (empty($node) || $node->language == LANGUAGE_NONE || !translation_supported_type($node->type)) {
+      if (empty($node) || entity_language('node', $node) == LANGUAGE_NONE || !translation_supported_type($node->type)) {
         return;
       }
-      $translations = array($node->language => $node);
+      $langcode = entity_language('node', $node);
+      $translations = array($langcode => $node);
     }
     else {
       $translations = translation_node_get_translations($node->tnid);
