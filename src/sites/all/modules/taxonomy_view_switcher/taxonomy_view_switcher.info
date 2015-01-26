@@ -1,0 +1,7 @@
+
+name = Taxonomy View Switcher
+description = Allows different views to be set for different taxonomy terms.
+core = 7.x
+dependencies[] = views
+dependencies[] = taxonomy
+

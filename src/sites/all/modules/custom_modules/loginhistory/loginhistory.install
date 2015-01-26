@@ -1,0 +1,41 @@
+﻿<?php
+/**
+*Реализация hook_shema()
+*/
+
+function loginhistory_schema(){
+	$schema['login_history'] = array(
+		'descriptions' => 'Stores infomation about user logins.',
+		// Хранит информацию о входах пользователя
+		'fields' => array(
+			'uid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'descriptions' => 'The {user}.uid of the user logging in.',
+				//{user}.uid пользователя, выполнил входную регистрацию.
+			),
+			'login'	=> array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'descriptions' => 'Unix timestamp denoting time of login.',
+				// Метка времени Unix о временах входа.
+			),
+		),
+		'indexes' => array(
+		 'uid' => array('uid'), 
+		),
+	);
+	return $schema;
+}
+
+
+
+
+
+
+
+
+
+

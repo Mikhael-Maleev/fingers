@@ -1,0 +1,6 @@
+name = Login History
+description = Keep track of user login.
+package = Pro Drupal Development
+core = 7.x
+files[] = loginhistory.install
+files[] = loginhistory.module

@@ -1,0 +1,46 @@
+﻿<?php
+
+/**
+*@file
+*Модуль для работы с системой меню Drupal.
+*/
+
+/**
+* Реализация hook_menu()
+*/
+function menufun_a_menu(){
+	$items['menufun/%a_zoo_animal'] = array(
+		'title' => 'Hi',
+		'page callback' => 'menufun_a_hello',
+		'page arguments' => array(1),
+		'access callback' => TRUE,
+		'type' => MENU_NORMAL_ITEM,
+		'weight' => -10
+	);
+	return $items;
+}
+
+function menufun_a_hello($animal){
+	return t("Hello $animal");
+}
+function a_zoo_animal_to_arg($arg){
+	//$arg содержит '%', т.к. это обобщенный символ.
+	// Заменим его животным из зоопарка.
+	return 'tiger';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

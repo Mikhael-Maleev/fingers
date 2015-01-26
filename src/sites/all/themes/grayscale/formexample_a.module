@@ -1,0 +1,110 @@
+﻿<?php
+/**
+*@file
+* Использование форм API. А также раделение полей на группы
+*/
+/**
+* Реализация hook_menu()
+*/
+function formexample_a_menu(){
+	$items['formexample-a'] = array(
+		'title' => t('View the a sample form'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('formexample_a_nameform'),
+		'access callback' => TRUE,
+		'type' => MENU_NORMAL_ITEM,
+	);
+	return $items;
+}
+/**
+* Определение формы.
+*/
+function formexample_a_nameform(){
+	$form['name'] = array(
+		'#title' => t('Your Name'),
+		'#type' => 'fieldset',
+		'#description' => t('What people call you.'),
+	);
+	$form['name']['user_name'] = array(
+		'#title' => t('Your Name'),
+		'#type' => 'textfield',
+		'#description' => t('Please enter your name.'),
+	);
+	$form['blinky'] = array(
+		'#markup' => '<div>'.t('You can write something between field set').'</div>',
+	);
+	$form['color'] = array(
+		'#title' => t('Color'),
+		'#type' => 'fieldset',
+		'#description' => t('This fields conteins the Color field.'),
+		'#collapsible' => TRUE,// Делает второй набор полей сворачиваеммым
+		'#collapsed' => FALSE, //  Развернутый вид
+	);
+	$form['color_options'] = array(
+		'#type' => 'value',
+		'#value' => array(t('Red'),t('Green'),t('Blue'),),
+	);
+	$form['color']['favorite_color'] = array(
+		'#title' => t('Favorite color'),
+		'#type' => 'select',
+		'#description' => t('Plese select your favorite color.'),
+		'#options' => $form['color_options']['#value'],
+		'#prefix' => '<blink>'.t('Be careful when choosing yuor color!').'</blink>',
+	);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+	);
+	//$form['#theme'] = 'formexample_a_nameform';
+	$form['#prefix'] = '<div class="my-form-clsassik">';
+	$form['#suffix'] = '</div>';
+	return $form;
+}
+/**
+* Проверка достоверности формы.
+*/
+function formexample_a_nameform_validate($form, &$form_state){
+	if($form_state['values']['user_name'] == ''){
+		// Уведомить что данное поле не прошло проверку.
+		form_set_error('user_name',t('You must enter some name.'));
+	}
+}
+/**
+* Обработка отправки формы после проверки достоверости
+*/
+function formexample_a_nameform_submit($form, &$form_state){
+	$name = $form_state['values']['user_name'];
+	$color_key = $form_state['values']['favorite_color'];
+	$color = $form_state['values']['color_options'][$color_key];
+	drupal_set_message(t('%name loves the color %color', array('%name' => $name, '%color' => $color)));
+}
+
+function formexample_a_nameform_theme(){
+	return array(
+		'formexample_a_nameform' => array(
+			'render element' => 'form',
+			//'template' => 'formexample-a-nameform',
+		),
+	);
+}
+
+function theme_formexample_a_nameform(&$variables){
+	return '<h1>heeeeeeeeeeeeeeeeeeellllllllloooooooo</h1>';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

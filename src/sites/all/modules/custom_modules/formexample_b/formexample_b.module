@@ -1,0 +1,239 @@
+﻿<?php
+
+function formexample_b_menu() {
+    $items = array();
+    $items['test-form'] = array(
+    'title' => 'Test form',
+    'page callback' => 'test_form_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    );
+    return $items;
+}
+
+function test_form_page() {
+    return drupal_get_form('test_form');
+}
+/* // Первая вариация
+function test_form($form_state) {
+    $form["example_text_field"] = array(
+    '#type' => 'textfield',
+    '#title' => 'Example text field',
+    );
+    $options = array(
+    0 => 'zero',
+    1 => 'one',
+    2 => 'two',
+    );
+    $form["example_select"] = array(
+    '#type' => 'select',
+    '#title' => 'Example select list',
+    '#options' => $options,
+    '#description' => t('You can select only value "one" in this
+    form'),
+    );
+    $form["submit"] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    );
+    return $form;
+}
+
+
+
+function test_form_validate($form, &$form_state) {
+    if($form_state['values']['example_select'] != 1) {
+    form_set_error('example_select', t('You must select value
+    "one" in select list :)'));
+    }
+}
+function test_form_submit($form, &$form_state) {
+    drupal_set_message('Form sumitted! Values:');
+    drupal_set_message("textbox: " .
+    $form_state['values']['example_text_field']);
+    drupal_set_message("selectlist: " .
+    $form_state['values']['example_select']);
+}
+*/ // конец первой вариации
+
+/*   // Вторая вариация
+    function test_form($form_state) {
+    $form["example_text_field"] = array(
+    '#type' => 'textfield',
+    '#title' => 'Example text field',
+    '#description' => 'Text must contain more then
+    3 symbols',
+    );
+    $options = array(
+    0 => 'zero',
+    1 => 'one',
+    2 => 'two',
+    );
+    $form["example_select"] = array(
+    '#type' => 'select',
+    '#title' => 'Example select list',
+    '#options' => $options,
+    '#description' => t('You can select only value "one" in this form'),
+    );
+    $form["submit"] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    );
+    //Добавлено
+    $form["#validate"] = array('test_validate_first',
+    'test_validate_second');
+    $form["#submit"] = array('test_submit_first',
+    'test_submit_second');
+    //Конец добавления
+    return $form;
+    }
+	
+
+
+    function test_validate_first($form, &$form_state) {
+    if(mb_strlen($form_state['values']['example_text_field']) < 3) {
+    form_set_error('example_text_field', t('Text must contain more then 3 symbols'));
+    }
+    }
+    function test_validate_second($form, &$form_state) {
+    if($form_state['values']['example_select'] != 1) {
+    form_set_error('example_select', t('You must select value "one" in select list :)'));
+    }
+    }
+    function test_submit_first($form, &$form_state) {
+    drupal_set_message('First submitter');
+    drupal_set_message("textbox: " . $form_state['values']['example_text']);
+    }
+    function test_submit_second($form, &$form_state) {
+    drupal_set_message('Second submitter');
+    drupal_set_message("selectlist: " . $form_state['values']['example_select']);
+    }
+*/	// конец второй вариации
+
+ /*   // Третья модификация
+function test_form($form_state) {
+    $form["example_text_field"] = array(
+    '#type' => 'textfield',
+    '#title' => 'Example text field',
+	'#description' => t('You can select only value "one" in this form'),
+	'#theme' => 'example_text_field_theme_function',
+    );
+    $options = array(
+    0 => 'zero',
+    1 => 'one',
+    2 => 'two',
+    );
+    $form["example_select"] = array(
+    '#type' => 'select',
+    '#title' => 'Example select list',
+    '#options' => $options,
+    '#description' => t('You can select only value "one" in this
+    form'),
+    );
+    $form["submit"] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    );
+    return $form;
+}
+
+
+function formexample_b_theme() {
+    return array(
+    'example_text_field_theme_function' => array(
+    'arguments' => array('form' => NULL),
+    ),
+    );
+}
+
+
+ function theme_example_text_field_theme_function($element) {
+    $class = "";
+    if(isset($element["#needs_validation"])) {
+    $class = " error";
+    }
+    $output = '<div id="wrapper-' . $element['']["#id"] . '"
+    class="form-item"><input id="edit-example-text-field"
+    class="form-text' . $class . '" name="' . $element['']["#name"]
+    . ' "></div>';
+    return $output;
+    }
+*/	// конец третьей модификации
+
+
+
+	// Четвертая модификация
+	
+
+function test_form($form_state) {
+    $form['#theme'] = 'test_form_theme_function';
+    $form["example_text_field"] = array(
+    '#type' => 'textfield',
+    '#title' => 'Example text field',
+    '#description' => 'Text must contain more then 3 symbols',
+    '#theme' => 'example_text_field_theme_function',
+    );
+    $options = array(
+    0 => 'zero',
+    1 => 'one',
+    2 => 'two',
+    );
+    $form["example_select"] = array(
+    '#type' => 'select',
+    '#title' => 'Example select list',
+    '#options' => $options,
+    '#description' => t('You can select only value "one"
+    in this form'),
+    );
+    $form["submit"] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    );
+    return $form;
+}
+
+function formexample_b_theme() {
+    return array(
+    'test_form_theme_function' => array(
+    'arguments' => array('form' => NULL),
+    ),
+    'example_text_field_theme_function' => array(
+    'arguments' => array('form' => NULL),
+    ),
+    );
+}
+
+function theme_example_text_field_theme_function($element) {
+    $class = "";
+    if(isset($element["#needs_validation"])) {
+    $class = " error";
+    }
+    $output = '<div id="wrapper-' . $element['']["#id"] . '"
+    class="form-item"><input id="edit-example-text-field"
+    class="form-text' . $class . '" name="' . $element['']["#name"]
+    . ' "></div>';
+    return $output;
+}
+	
+
+function theme_test_form_theme_function($form) {
+    $output = "Some additional text";
+	$form['']["example_text_field"]["#title"] = "New title";
+	$form['']["example_text_field"]["#description"] = "You can enter everything";
+    // Выводим некоторые элменты отдельно с дополнительным
+    // форматированием
+	    $output .= '<div style="background-color: #ccc; padding: 3px;">';
+    $output .= drupal_render($form['']['example_text_field']);
+    $output .= "</div>";
+ // Выводим остальные элементы, которые не были выведены ранее
+    $output .= drupal_render($form['']['example_select']);
+	$output .= drupal_render($form['']['submit']);
+    return $output;
+ 
+   
+   
+
+}
+	
+	
+ // конец четвертой модификации

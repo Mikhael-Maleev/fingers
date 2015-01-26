@@ -1,0 +1,49 @@
+﻿<?php
+/**
+*@file
+*Отслеживает входы пользователя
+*/
+
+/**
+* Реализация hook_form_login()
+*/
+function loginhistory_user_login(&$edit, $account){
+	// Добавление новой записи при каждом входе пользователя.
+	$nid = db_insert('login_history')-> fields(array(
+		'uid' => $account->uid,
+		'login' => $account->login
+	))->execute();
+}
+
+/*
+* Реализация hook_user_view_alter()
+*/
+
+function loginhistory_user_view_alter(&$build){
+	global $user;
+	//Подсчет входов пользователя
+	$login_count = db_query("SELECT count(*) FROM {login_history} where uid = :uid",
+	array(':uid' => $user->uid))->fetchField();
+
+
+	// Добавление на стену пользователя колличества его входов.
+	$build['summary']['login_history'] = array(
+		'#type' => 'user_profile_item',
+		'#title' => t('Number of logins'), // Количество входов
+		'#markup' => $login_count,
+		'#weight' => 10,
+	);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

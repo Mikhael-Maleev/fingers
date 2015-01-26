@@ -1,0 +1,13 @@
+<?php
+/**
+*
+*@file
+* Подставление символа для разделителя эелементов навигационной цепочки.
+*/
+
+/**
+*	Реализация $modulename_preprocess_breadcrumb().
+*/
+function crumbpicker_preprocess_breadcrumb(&$variables){
+	$variables['breadcrumb_delimiter'] = '/';
+}

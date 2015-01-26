@@ -1,0 +1,126 @@
+﻿<?php
+
+/**
+*@file
+* Реализация различных блоков для робочего потока обработки ожидающего контента.
+*/
+/*
+* Реализация hook_block_info()
+*/
+function approval_block_info(){
+	$blocks['pending_comments'] = array(
+	'info' => t('Pending Comments'), // Ожидающие коментарии
+	'status' => TRUE,
+	'region' => 'sidebar_first',
+	'weight' => 0,
+	'visibility' => 0,
+	);
+	$blocks['unpublished_nodes'] = array(
+	'info' => t('Unpublished_nodes'), // Неопубликованые ноды
+	'status' => TRUE,
+	'region' => 'sidebar_first',
+	'weight' => 0,
+	'visibility' => 0,
+	);
+	return $blocks;
+}
+/*
+* Реализация hook_block_configure()
+*/
+function approval_block_configure($delta){
+	$form = array();
+	
+	switch($delta) {
+	 case 'pending_comments':
+		$form['pending_comment_count'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Configure Number of Comments to Display'), // Укажите колличество выводимих коментариев
+			'#size' => '6',
+			'#description' => t('Enter the number of pending comments that will appear in the block.'), // Укажите колличество ожидающих коментариев которые будут отображаться в блоке.
+			'#default_value' => variable_get('pending_comment_count', 5),
+		);
+		break;
+		
+		case 'unpublished_nodes':
+		$form['unpublished_nodes_count'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Configure Number of Nodes to Display'), // Укажите колличество выводимих нод
+			'#size' => '6',
+			'#description' => t('Enter the number of nodes that will appear in the block.'), // Укажите колличество ожидающих коментариев которые будут отображаться в блоке.
+			'#default_value' => variable_get('unpublished_nodes_count', 5),
+		);
+		break;
+	}
+	return $form;
+}
+/*
+* Реализация hook_block_save()
+*/
+function approval_block_save($delta = '', $edit = array()){
+	switch($delta){
+		case 'pending_comments':
+			variable_set('pending_comment_count', (int)$edit['pending_comment_count']);
+			break;
+		case 'unpublished_nodes':
+			variable_set('unpublished_nodes_count', (int)$edit['unpublished_nodes_count']);
+			break;
+	}
+	return;
+}
+/*
+* Реализация hook_block_view()
+*/
+function approval_block_view($delta = ''){
+	switch($delta){
+		case 'pending_comments':
+			$block['subject'] = t('Pending Comments'); //Ожидающие коментарии
+			$block['content'] = approval_block_contents($delta);
+			return $block;
+			break;
+		case 'unpublished_nodes':
+			$block['subject'] = t('Unpublished Nodes'); // Неопубликованные страницы
+			$block['content'] = approval_block_contents($delta);
+			return $block;
+			break;
+	}
+}
+function approval_block_contents($delta = ''){
+	switch($delta){
+		case 'pending_comments':
+			if(user_access('administer comments')){
+				$nbr_comments = variable_get('pending_comment_count');
+				$result = db_query("SELECT cid, subject FROM {comment} WHERE status = 0 limit $nbr_comments");
+				$items = array();
+				foreach ($result as $row){
+					$items[] = l($row->subject, 'comment/'.$row->cid.'/edit');
+				}
+				return array('#markup' => theme('item_list', array('items' => $items)));
+			}
+			break;
+		case 'unpublished_nodes':
+			if(user_access('administer nodes')){
+				$nbr_nodes = variable_get('unpublished_nodes_count');
+				$result = db_query("SELECT nid, title FROM {node} WHERE status = 0 limit $nbr_nodes");
+				$items = array();
+				foreach ($result as $row){
+					$items[] = l($row->title, 'node/'.$row->nid.'/edit');
+				}
+				return array('#markup' => theme('item_list', array('items' => $items)));
+			}
+			break;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

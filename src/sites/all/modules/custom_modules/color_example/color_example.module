@@ -1,0 +1,264 @@
+﻿<?php
+
+/**
+*@file
+* Пример поля, использующего API.
+*/
+
+/**
+* Реализация hook_field_info()
+*/
+function color_example_field_info(){
+	return array(
+	'color_example_rgb' => array(
+		'label' => t('Exemple color RGB'), //Пример RGB-цвета
+		'description' => t('Demonstrates a field composed of an RGB color.'),
+		//Демонстрация поля составленного из RGB-цвета
+		'default_widget' => 'color_example_3text',
+		'default_formatter' => 'color_example_simple_text',
+		),
+	);
+}
+
+/**
+* Реализация hook_field_schema()
+*/
+function color_example_field_schema($field){
+	$columns = array(
+		'rgb' => array('type' => 'varchar', 'length' => 7, 'not null' => FALSE),
+	);
+	$indexes = array(
+		'rgb' => array('rgb'),
+	);
+	return array(
+		'columns' => $columns,
+		'indexes' => $indexes,
+	);
+}
+
+/**
+* Реализация hook_field_validate()
+* Проверка правильности содержимого поля RGB
+* (6 щестнадцатиричных цифр, перед которыми находится #).
+*/
+function color_example_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors){
+	foreach($items as $delta => $item){
+		if(!empty($item['rgb'])){
+			if(!preg_match('@^#[0-9a-fA-F]{6}$@', $item['rgb'])){
+				$errors[$field['field_name']][$langcode][$delta][] = array(
+					'error' => 'color_example_invalid',
+					'message' => t('Color must be in the HTML format #abcdef.'),
+					// Цвет должен быть задан в HTML-формате #abcdef.
+				);
+			}
+		}
+	}
+}
+
+/**
+* Реализация hook_field_is_empty().
+*/
+function color_example_field_is_empty($item, $field){
+	return empty($item['rgb']);
+}
+
+
+/**
+* Реализация hook_field_formatter_info().
+*/
+function color_example_field_formatter_info(){
+	return array(
+		// Этот форматер просто выводит шестнадцатиричное значение цвета.
+		'color_example_simple_text' => array(
+			'label' => t('Simple text-based formater'), // Простой текстовый форматер
+			'field types' => array('color_example_rgb'),
+		),
+		'color_example_color_background' => array(
+			'label' => t('Change the background of the output text'), // Изменение фона выводимого текста
+			'field types' => array('color_example_rgb'),
+		),
+	);
+}
+
+/**
+* Реализация hook_field_formatter_view().
+*/
+function color_example_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display){
+	$element = array();
+	switch ($display['type']){
+		// Этот форматер просто выводит поле в текстовом виде заданным цветом.
+		case 'color_example_simple_text':
+			foreach($items as $delta => $item){
+				$element[$delta]['#markup'] = '<p style="color: '.$item['rgb'].'">'
+				.t('The color for this event is @code', array('@code' => $item['rgb'])).'</p>';
+			} break;
+		// Этот форматер добавит на страницу содержимое CSS-форматирование,
+		// изменяя фоновый цвет области .region-content.
+		// При наличии нескольких полей в расчет берется последнее.
+		case 'color_example_color_background':
+			foreach($items as $delta => $item){
+				drupal_add_css('div.region-content{background-color: '.$item['rgb'].';}',
+				array('type' => 'inline'));
+				$element[$delta]['#markup'] = '<p>'
+				.t('The color for this event has been changed to @code',
+				array('@code' => $item['rgb'])).'</p>';
+			} break;
+	}
+	return $element;
+}
+
+/**
+* Реализация hook_field_widget_info().
+*/
+function color_example_field_widget_info(){
+	return array(
+		'color_example_text' => array(
+			'label' => t('RGB value as #ffffff'), //RGB-значение в виде #ffffff
+			'field types' => array('color_example_rgb')
+		),
+		'color_example_3text' => array(
+			'label' => t('RGB text fields'), // Текстовые поля для значений RGB
+			'field types' => array('color_example_rgb')
+		),
+		'color_example_colorpicker' => array(
+			'label' => t('Color Picker'), //Палитра для выбора цвета
+			'field types' => array('color_example_rgb')
+		),
+	);
+}
+
+/**
+* Реализация hook_field_widget_form().
+*/
+function color_example_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element){
+	$value = isset($items[$delta]['rgb']) ? $items[$delta]['rgb'] : '';
+	$element += array(
+		'#delta' => $delta,
+	);
+	$element['rgb'] = array();
+	
+	switch($instance['widget']['type']){
+		case 'color_example_colorpicker':
+			$element['rgb'] += array(
+				'#suffix' => '<div class="field-example-colorpicker"></div>',
+				'#attributes' => array('class' => array('edit-field-example-colorpicker')),
+				'#attached' => array(
+					'library' => array( //Добавление палитры для выбора цвета.
+						array('system', 'farbtastic'),
+					),
+					//Добавление  javascript-кода, который скрывает/отображает палитру.
+					'js' => array(drupal_get_path('module','color_example').'/color_example.js'),
+				),
+			);
+			//С этого момента color_example_text и color_example_colorpicker
+			//в точности совпадают
+		case 'color_example_text':
+			$element['rgb'] += array(
+				'#title' => t("Event's RGB Color"),
+				'#type' => 'textfield',
+				'#default_value' => $value,
+				// Немного увеличим длину поля, чтобы поместить некоторые сочитания символов.
+				'#size' => 7,
+				'#maxlength' => 7,
+				); break;
+		case 'color_example_3text':	
+			//Преобразование значения rgb в r, g и b для #default_value
+			if (isset($items[$delta]['rgb'])){
+				preg_match_all('@..@', substr($items[$delta]['rgb'],1), $match);
+			}else{
+				$match = array(array());
+			}
+			//Набор из трех полей для ноебходимых значений.
+			$element += array(
+				'#type' => 'fieldset',
+				'#element_validate' => array('color_example_3text_validate'),
+				//Этот фрагмент нужен, чтобы функция проверки смогла получить внешнее значение
+				'#delta' => $delta,
+				'#attached' => array(
+					'css' => array(drupal_get_path('module','color_example').'/color_example.css'),
+				),
+			);
+			// Создание тестового поля для значений насыщенности Red, Green и Blue
+			foreach(array('r' => t('Red'), 'g' => t('Green'), 'b' => t('Blue')) as $key => $title){
+				$element[$key] = array(
+					'#type' => 'textfield',
+					'#title' => $title,
+					'#size' => 2,
+					'#default_value' => array_shift($math[0]),
+					'#attributes' => array('class' => array('rgb-entry')),
+					//'#description' => t('The 2-didgit hexademical representation of the 
+					//@colr saturation, like "a1" or "ff"', array('@color' => $title)),
+				); 
+			}break;	
+	}
+	return $element;
+}
+
+/**
+* Проверка отельных полей и их преобразование в единое текстовое HTML-значение RGB.
+*/
+function color_example_3text_validate($element, &$form_state){
+	$delta = $element['#delta'];
+	$field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
+	$field_name = $field['field_name'];
+	if(isset($form_state['values'][$field_name][$element['#language']][$delta])){
+		$values = $form_state['values'][$field_name][$element['#language']][$delta];
+		foreach(array(r, g, b) as $colorfield){
+			$val = hexdec($values[$colorfield]);
+			//Если какое-то из полей пусто, устанавливаем пустое значение и выходим.
+			if((strlen($values[$colorfield]) != 2) || $val < 0 || $val > 255){
+				form_error($element[$colorfield],
+				t('Saturation value must be a 2-didgit hexademical value betwen 00 and ff.'));
+				// Значение насыщения должно быть 2-значным шестнадцатиричным значением от 00 до ff.
+			}
+		}
+	$value = sprintf('#%02s%02s%02s', $values['r'], $values['g'], $values['b']);
+	form_set_value($element, array('rgb' => $value), $form_state);
+	}
+}
+
+/**
+* Реализация hook_field_error().
+*/
+function color_example_field_widget_error($element, $error, $form, $form_state){
+	switch($error['error']){
+		case 'color_example_invalid':
+			form_error($element, $error['massage']); break;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

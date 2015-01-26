@@ -1,0 +1,5 @@
+﻿name = Menu Fun A
+description = Learning about the menu system with global symbol.
+package = Pro Drupal Development
+core = 7.x
+files[] = menufun_a.module

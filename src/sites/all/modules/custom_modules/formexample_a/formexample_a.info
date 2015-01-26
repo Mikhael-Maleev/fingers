@@ -1,0 +1,5 @@
+name = Form Example a
+description = Show how to build a Drupal form
+package = Pro Drupal Development
+core = 7.x
+files[] = formexample_a.module

@@ -1,0 +1,77 @@
+﻿<?php
+/**
+*@file
+*Поддержка коварного текста официального соглашения
+*во время регистрации пользователя.
+*/
+
+/**
+* Реализация hook_form_alter()
+*/
+function legalagree_form_alter(&$form, &$form_state, $form_id){
+	//Проверяет, выполняет ли форма регистрацию или настройку профиля пользователя.
+	//Если нет - возврат без каких-либо действий.
+	if(!($form_id == 'user_register_form' || $form_id == 'user_profile_form')){
+		return ;
+	}
+
+// Добавление в форму новой функции проверки для заключения официального соглашения.
+$form['#validate'][] = 'legalagree_user_form_validate';
+
+//Добавление набора полей для заключения официального соглашения.
+$form['account']['legal_agreement'] = array(
+	'#type' => 'fieldset',
+	'#title' => t('Legal agreement'), // Официальное соглашение
+);
+
+// Добавление кнопок переключателя для заключения.
+$form['account']['legal_agreement']['decision'] = array(
+	'#type' => 'radios',
+	'#description' => t('By registred at %site-name, you agree that an any time, we (or our surly, brutish henchmen) may enter your place of residanse and smash your belonging with a ball-pen hameer.', 
+	// Регистрируясь на сайте %site-name, вы соглашаетесь с тем, что в любое
+	//время мы (или наши угрюмые свирепые бандиты) можем прийти к вам
+	//и розмолотить все ваши вещи кувалдой.
+	array('%site-name' => variable_get('site_name','drupal'))),
+'#default_value' => 0,
+'#options' => array(t('I disagree'),t('I agree'))
+);
+
+}
+
+
+
+
+/*
+* Обработчик проверки формы для текущего пароля на user_account_form().
+*
+* @see user_account_form()
+*/
+
+function legalagree_user_form_validate($form, &$form_state){
+	global $user;
+	//Визуальная проверка
+	if($form_state['input']['decision'] <> 1){
+		form_set_error('decision', t('You must agree to the Legal Agreement before registration can be completed.'));
+		//Для завершения регистрации вы должны принять официальное соглашение.
+	}else{
+		watchdog('user', t('User %user agreed to legal terms', 
+			array('%user' => $user->name)));
+		//Пользователь %user принял официальные условия.
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

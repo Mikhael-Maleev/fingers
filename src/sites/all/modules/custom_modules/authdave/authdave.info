@@ -1,0 +1,5 @@
+name = Authentificate Daves
+description = External authentification for all Daves.
+package = Pro Drupal Development
+core = 7.x
+files[] = authdave.module

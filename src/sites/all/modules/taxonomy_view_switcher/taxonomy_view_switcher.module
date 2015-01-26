@@ -1,0 +1,101 @@
+<?php
+
+function taxonomy_view_switcher_menu_alter(&$items) {
+  $items['taxonomy/term/%']['page callback']    = 'taxonomy_view_switcher_render_view';
+  $items['taxonomy/term/%']['page arguments']   = array(2);
+  $items['taxonomy/term/%']['access callback']  = 'taxonomy_view_switcher_view_access';
+  $items['taxonomy/term/%']['access arguments'] = array(2);
+}
+
+function taxonomy_view_switcher_render_view($tid = '', $depth = 0, $op = 'page'){
+
+  $target = taxonomy_view_switcher_get_view();
+ 
+  if (isset($target['view'])) {
+  	$view = views_get_view($target['view']);
+    $view->set_display($target['display']);
+    $view->set_arguments(array($tid, $depth));
+    $view->build();
+    drupal_set_title(str_replace('&amp;','&',$view->get_title()));
+    return $view->preview();
+  }
+  return t('No suitable view found');
+}
+
+function taxonomy_view_switcher_view_access($term){
+  //TODO: add access control if necessary
+  return true;
+}
+
+function taxonomy_view_switcher_get_view(){
+  $view_path = request_path(); //use the request path, not the aliased path and escape the forward slashes
+
+  if ($cached = cache_get("taxonomy_view_switcher:$view_path")) {
+    return $cached->data;
+  }  
+
+  $target_view = array(3); // default target view;
+  $default_view = array(3); // default view if no suitable target found
+
+  $views = views_get_all_views();
+  foreach ($views as $view) {
+    if (isset($view->disabled) && $view->disabled) continue;
+
+    foreach ($view->display as $name => $display) 
+    {
+      // Each view can have multiple displays. These may have a path specified.
+      $plugin = $display->display_plugin;
+
+      // It has a path or it is not eligable.
+      if (!in_array($plugin, array('block', 'feed', 'default'))) {
+        if (!isset($display->display_options['path'])) continue;
+
+        $path = $display->display_options['path']; // this display might be suitable
+        if (!(strpos($path,'switch/') == 0)) continue; // path must start with "switch/" otherwise display is of no use
+        $path = preg_replace('/^(switch)?\//','',$path);
+        $path = preg_replace('/(\/\%)?$/','',$path);
+
+        // Match the view to the current request_path
+        if (preg_match('/'.str_replace('/','\/',$path).'/', $view_path)) {
+          // this path matches, now we want to see if it's a more specific (ie deeper) path than any existing ones)
+          if (!isset($target_view['view']) || substr_count($path,'/') > substr_count($target_view['path'],'/')) {
+            $target_view = array(
+              'view'    => $view->name,
+              'display' => $name,
+              'path' => $path
+            );
+          }
+        } elseif ($path == 'taxonomy/term') {
+            $default_view = array(
+              'view'    => $view->name,
+              'display' => $name,
+              'path' => $path
+            );
+        } else {
+          // see if there is a taxonomy vid or tid match
+          if (substr($path,0,4) == 'vid/') {
+            $term = taxonomy_term_load(arg(2));
+            if ($path == 'vid/'.$term->vid) {
+              $target_view = array(
+                'view'    => $view->name,
+                'display' => $name,
+                'path' => $path
+              );
+              break; // for now, a vid match is totally specific, so end matching process (TODO: consider making this more flexible and allowing tid matches)
+            }
+          }        
+        }
+      }
+    }
+  }
+  if (isset($target_view['view']))
+  {
+    cache_set("taxonomy_view_switcher:$view_path",$target_view);
+    return $target_view;
+  } else {
+    cache_set("taxonomy_view_switcher:$view_path",$default_view);
+    return $default_view;
+  }
+}
+
+

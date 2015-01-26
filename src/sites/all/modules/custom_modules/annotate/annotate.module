@@ -1,0 +1,50 @@
+<?php
+
+/**
+*
+*@file
+*Позволяет добавлять пользователям персональные анотации
+*
+*
+*При выводе ноды добавляет текстовое поле, которое позволяет
+*аутеинфицированным пользователям вствлять примечания.
+*/
+
+/**
+*	Реализация hook_menu().
+*/
+function annotate_menu(){
+	$items['admin/config/annotate'] = array(
+		'title' => 'Node annotation', // Анотирование ноды
+		'description' => 'Adjust node annotate options.', // Настройка параметров аннотирования ноды
+		'position' => 'right',
+		'weight' => '-5',
+		'page callback' => 'system_admin_menu_block_page', // Обратный вызов страници
+		'access arguments' => array('administer site configuration'), // аргументы доступа
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module','system'),
+		);
+	$items['admin/config/annotate/settings'] = array(
+		'title' => 'Annotation settings', // Параметры анотации
+		'description' => 'Change how annotations behave.', // Изменение поведения аннотаций
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('annotate_admin_settings'),
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'annotate.admin.inc',
+		);
+	return $items;
+}
+/**
+* Реализация hook_node_load()
+*/
+function annotate_node_load($nodes,$types){
+	global $user;
+	// Проверка, является ли лицо, просматривющее ноду, автором.
+	// Если нет, аннотация скрывается.
+	foreach($nodes as $node){
+		if($user->uid != $node->uid){
+			unset($node->annotation);
+		}
+	}
+}

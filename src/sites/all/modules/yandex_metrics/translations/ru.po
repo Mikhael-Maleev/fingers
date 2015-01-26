@@ -1,0 +1,336 @@
+# Russian translation of Drupal module Yandex.Metrics
+# Copyright Konstantin Komelin <konstantin.komelin@gmail.com>
+# Generated from files:
+#  yandex_metrics.module: n/a
+#  yandex_metrics.info: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: yandex_metrics 7.x-1.x\n"
+"POT-Creation-Date: 2011-12-06 21:50+0300\n"
+"PO-Revision-Date: 2011-12-06 22:52+0400\n"
+"Last-Translator: Konstantin Komelin <konstantin.komelin@gmail.com>\n"
+"Language-Team: Russian <konstantin.komelin@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=((((n%10)==1)&&((n%100)!=11))?(0):(((((n%10)>=2)&&((n%10)<=4))&&(((n%100)<10)||((n%100)>=20)))?(1):2));\n"
+"X-Poedit-Language: Russian\n"
+"X-Poedit-Country: RUSSIAN FEDERATION\n"
+
+#: yandex_metrics.module:35
+msgid "Administer Yandex.Metrics Settings"
+msgstr "Управлять Yandex.Metrics настройками"
+
+#: yandex_metrics.module:38
+msgid "Access Yandex.Metrics report"
+msgstr "Доступ к Yandex.Metrics отчету"
+
+#: yandex_metrics.module:113;199
+#, fuzzy
+msgid "Popular content"
+msgstr "Популярное содержимое"
+
+#: yandex_metrics.module:123;217
+msgid "Today"
+msgstr "Сегодня"
+
+#: yandex_metrics.module:124;218
+msgid "Yesterday"
+msgstr "Вчера"
+
+#: yandex_metrics.module:125;219
+msgid "Week"
+msgstr "Неделя"
+
+#: yandex_metrics.module:126;220
+msgid "Month"
+msgstr "Месяц"
+
+#: yandex_metrics.module:130
+msgid "Select date period"
+msgstr "Выберите промежуток времени"
+
+#: yandex_metrics.module:131
+msgid "This date period will be used to filter popular content."
+msgstr "Этот период времени будет использован для фильтрации популярного содержимого."
+
+#: yandex_metrics.module:137
+msgid "Select count of links to show"
+msgstr "Выберите количество ссылок для показа"
+
+#: yandex_metrics.module:138
+msgid "The count of links that shown in the block."
+msgstr "Количество ссылок, которое будет показано в блоке."
+
+#: yandex_metrics.module:224
+msgid "Quick filter"
+msgstr "Быстрый фильтр"
+
+#: yandex_metrics.module:231
+msgid "Submit"
+msgstr "Отправить"
+
+#: yandex_metrics.module:302;954
+msgid "Please create Yandex.Metrics counter for the site first and then try again. To create counter visit !ym_link"
+msgstr "Пожалуйста, сначала создайте счетчик Яндекс.Метрики для этого сайта, а затем попробуйте снова. Для создания счетчика посетите !ym_link"
+
+#: yandex_metrics.module:309;946
+msgid "Perhaps you have not yet placed Yandex.Metrics counter code on the site. You can do this !link."
+msgstr "Возможно, вы еще не поместили код счетчика Яндекс.Метрики на сайт. Вы можете сделать это !link."
+
+#: yandex_metrics.module:309;317;712;946;961
+msgid "here"
+msgstr "здесь"
+
+#: yandex_metrics.module:317;961
+msgid "Please make sure that your application is authorized !link."
+msgstr "Пожалуйста, убедитесь в том, что ваше приложение авторизовано !link."
+
+#: yandex_metrics.module:393
+msgid "There is no information about search phrases for the selected date range."
+msgstr "За выбранный период информация о поисковых фразах отсутствует."
+
+#: yandex_metrics.module:398
+msgid "Visits (%)"
+msgstr "Посещения (%)"
+
+#: yandex_metrics.module:398
+msgid "Phrase"
+msgstr "Фраза"
+
+#: yandex_metrics.module:412;1110
+msgid "Popular Search Phrases"
+msgstr "Популярные поисковые фразы"
+
+#: yandex_metrics.module:435
+msgid "There is no information about traffic sources for the selected date range."
+msgstr "За выбранный период информация о источниках переходов отсутствует."
+
+#: yandex_metrics.module:440;1105
+msgid "Traffic Sources"
+msgstr "Источники переходов"
+
+#: yandex_metrics.module:483
+msgid "There is no information about page views and visitors for the selected date range."
+msgstr "За выбранный период информация о просмотрах страниц и посетителях отсутствует."
+
+#: yandex_metrics.module:505;1100
+msgid "Views, Visitors, New Visitors"
+msgstr "Просмотры, посетители, новые посетители"
+
+#: yandex_metrics.module:529
+msgid "Views"
+msgstr "Просмотры"
+
+#: yandex_metrics.module:530
+msgid "Visitors"
+msgstr "Посетители"
+
+#: yandex_metrics.module:531
+msgid "New Visitors"
+msgstr "Новые посетители"
+
+#: yandex_metrics.module:564
+msgid "There is no information about popular content for the selected date range."
+msgstr "За выбранный период информация о популярном содержимом отсутствует."
+
+#: yandex_metrics.module:567
+msgid "URL"
+msgstr "URL"
+
+#: yandex_metrics.module:567
+msgid "Page Views"
+msgstr "Просмотры страниц"
+
+#: yandex_metrics.module:580;1115
+msgid "Popular Content"
+msgstr "Популярное содержимое"
+
+#: yandex_metrics.module:590;64
+msgid "Counter Code"
+msgstr "Код счетчика"
+
+#: yandex_metrics.module:593
+msgid "Paste Yandex.Metrics counter code for your site here. You can generate such code at !ym_link."
+msgstr "Сюда вставьте код счетчика Яндекс.Метрики для вашего сайта. Вы можете создать такой код на !ym_link."
+
+#: yandex_metrics.module:598
+msgid "Page specific tracking settings"
+msgstr "Настройки слежения для страниц"
+
+#: yandex_metrics.module:605
+msgid "Add to every page except the listed pages."
+msgstr "Добавить к каждой странице, кроме перечисленных."
+
+#: yandex_metrics.module:606
+msgid "Add to the listed pages only."
+msgstr "Добавить только к перечисленным страницам."
+
+#: yandex_metrics.module:610
+msgid "Add code to specific pages"
+msgstr "Добавить код к определенным страницам"
+
+#: yandex_metrics.module:616
+msgid "Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page."
+msgstr "Вводите по одному внутреннему пути Drupal на строку. Символ '*' заменяет любое количество символов. Например, введите %blog для обзорной страницы блогов, %blog-wildcard для всех персональных блогов. %front - главная страница."
+
+#: yandex_metrics.module:619
+msgid "Pages"
+msgstr "Страницы"
+
+#: yandex_metrics.module:629
+msgid "Role specific tracking settings"
+msgstr "Настройки слежения для ролей"
+
+#: yandex_metrics.module:636
+msgid "Add tracking for specific roles"
+msgstr "Добавить слежение за определенными ролями"
+
+#: yandex_metrics.module:638
+msgid "Add to the selected roles only"
+msgstr "Добавить только для выделенных ролей"
+
+#: yandex_metrics.module:639
+msgid "Add to every role except the selected ones"
+msgstr "Добавить для каждой роли, кроме выделенных"
+
+#: yandex_metrics.module:651
+msgid "Roles"
+msgstr "Роли"
+
+#: yandex_metrics.module:654
+msgid "If none of the roles are selected, all users will be tracked. If a user has any of the roles checked, that user will be tracked (or excluded, depending on the setting above)."
+msgstr "Если не выделено ни одной роли, все пользователи будут отслеживаться. Если пользователь обладает любой из выделенных ролей, этот пользователь будет отслеживаться (или нет, в зависимости от настроек выше)."
+
+#: yandex_metrics.module:660
+msgid "Save"
+msgstr "Сохранить"
+
+#: yandex_metrics.module:660
+msgid "Save & Continue"
+msgstr "Сохранить и продолжить"
+
+#: yandex_metrics.module:685
+msgid "The Counter Code settings has been saved successfully."
+msgstr "Настройки Кода Счетчика успешно сохранены."
+
+#: yandex_metrics.module:696
+msgid "The application is already authorized."
+msgstr "Приложение уже авторизовано."
+
+#: yandex_metrics.module:699
+msgid "The application is not authorized yet."
+msgstr "Приложение еще не авторизовано."
+
+#: yandex_metrics.module:708
+msgid "Client ID"
+msgstr "ID клиента"
+
+#: yandex_metrics.module:711
+msgid "Please register Yandex aplication at !app_register_link to get access to Yandex.Metrics service. Then enter your application client ID in this field. The full list of your Yandex applications is located !app_list_link."
+msgstr "Пожалуйста, зарегистрируйте приложение Яндекс на странице !app_register_link, чтобы получить доступ к сервису Яндекс.Метрика. Затем введите ID клиента вашего приложения в данное поле. Полный список ваших приложений находится !app_list_link."
+
+#: yandex_metrics.module:717
+msgid "Client Secret"
+msgstr "Пароль клиента"
+
+#: yandex_metrics.module:719
+msgid "Enter your application secret in this field."
+msgstr "В данное поле введите пароль вашего приложения."
+
+#: yandex_metrics.module:724
+msgid "Re-Authorize Application"
+msgstr "Повторно авторизовать приложение"
+
+#: yandex_metrics.module:724
+msgid "Authorize Application"
+msgstr "Авторизовать приложение"
+
+#: yandex_metrics.module:742
+msgid "Please set Client ID first."
+msgstr "Пожалуйста, сначала укажите ID клиента."
+
+#: yandex_metrics.module:760;777
+msgid "An error has occurred. Please try again."
+msgstr "Произошла ошибка. Пожалуйста, попробуйте снова."
+
+#: yandex_metrics.module:786
+msgid "Congratulations! Your application has been authorized by Yandex.Metrics service."
+msgstr "Поздравляем! Ваше приложение было авторизовано сервисом Яндекс.Метрика."
+
+#: yandex_metrics.module:820
+msgid "An error has occurred."
+msgstr "Произошла ошибка."
+
+#: yandex_metrics.module:1088
+msgid "Load reports via AJAX"
+msgstr "Загружать отчеты с помощью AJAX"
+
+#: yandex_metrics.module:1094
+msgid "Reports visibility settings"
+msgstr "Настройки видимости отчетов"
+
+#: yandex_metrics.module:1095
+msgid "Choose reports to display on Yandex.Metrics Summary Report page."
+msgstr "Выберите отчеты для отображения на странице Сводного отчета Yandex.Metrics."
+
+#: yandex_metrics.module:1120;1151
+msgid "Geography of Visits"
+msgstr "География посещений"
+
+#: yandex_metrics.module:1146
+msgid "There is no information about geography of visits for the selected date range."
+msgstr "За выбранный период информация о географии посещений отсутствует."
+
+#: yandex_metrics.module:1178
+msgid "Others"
+msgstr "Другие"
+
+#: yandex_metrics.module:759;776;785;819;1035
+msgid "yandex_metrics"
+msgstr ""
+
+#: yandex_metrics.module:759
+msgid "The \"code\" parameter is empty."
+msgstr "Параметр \"код\" пуст."
+
+#: yandex_metrics.module:776
+msgid "Token request seems to be fail, due to \"%error\"."
+msgstr "Запрос токена кажется неудачным из-за \"%error\"."
+
+#: yandex_metrics.module:785
+msgid "Token request is successful."
+msgstr "Запрос токена успешен."
+
+#: yandex_metrics.module:819
+msgid "Counters request seems to be fail, due to \"%error\"."
+msgstr "Запрос счетчиков кажется неудачным из-за \"%error\"."
+
+#: yandex_metrics.module:1035
+msgid "Popular content for %filter has been saved."
+msgstr "Популярный контент за %filter был сохранен."
+
+#: yandex_metrics.module:57
+#: yandex_metrics.info:0
+msgid "Yandex.Metrics"
+msgstr ""
+
+#: yandex_metrics.module:72
+msgid "Authorization"
+msgstr "Авторизация"
+
+#: yandex_metrics.module:80
+msgid "Reports"
+msgstr "Отчеты"
+
+#: yandex_metrics.module:87;94
+msgid "Yandex.Metrics Summary Report"
+msgstr "Сводный отчет Yandex.Metrics"
+
+#: yandex_metrics.info:0
+msgid "Yandex.Metrics Integration."
+msgstr "Интеграция с Яндекс.Метрикой."
+
+#~ msgid "Perform configuration for Yandex.Metrics."
+#~ msgstr "Выполнить настройку Yandex.Metrics."

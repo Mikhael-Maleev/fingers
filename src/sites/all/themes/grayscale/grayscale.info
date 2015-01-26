@@ -1,0 +1,8 @@
+
+name = Grayscale
+description = My test clear theme.
+core = 7.x
+
+stylesheets[all][] = style-corporate.css
+
+

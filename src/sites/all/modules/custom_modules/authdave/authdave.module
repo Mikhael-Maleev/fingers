@@ -1,0 +1,72 @@
+﻿<?php
+
+/**
+* Реализация hook_form_alter()
+* Заменяем локальный обработчик входной формы проверки нашим обработчиком.
+*/
+function authdave_form_alter(&$form, &$form_state, $form_id){
+	// В данном простом примере выполняется аутенитификация по имени
+	// пользователя - проверяем, начинается ли оно на Dave
+	if($form_id == 'user_login' || $form_id == 'user_login_block'){
+		$form['#validate'][] = 'authdave_user_form_validate';
+	}
+}
+/**
+* Специальная функция проверки формы authdave_user_form_validate()
+*/
+function authdave_user_form_validate($form, &$form_state){
+	if(!authdave_authenticated($form_state)){
+		$username = $form_state['input']['name']; // получение имени из формы
+		form_set_error('name', t('%testname is unrecognized username.', array('%testname' => $username)));
+		//Пользовательское имя не распознанно.
+	}
+}
+
+/*
+* Специальная функция аутентификации пользователя.
+*/
+function authdave_authenticated($form_state){
+	//Извлечение первых четырех символов пользовательского имени.
+	$username = $form_state['input']['name'];
+	$testname = drupal_substr(drupal_strtolower($username), 0, 4);
+	
+	//Проверка зовут ли пользователя Dave
+	if($testname == "dave"){
+		//Если это Dave, вызывается функция external_login_register()
+		// либо для входа, либо для создания новой учетной записи,
+		// если тот, кто вошел, еще не является пользователем Drupal.
+		user_external_login_register($username, 'authdave');
+		return TRUE;
+	}else{
+		return FALSE;
+	}
+}
+
+/*
+* Реализация hook_user_insert()
+*/
+function authdave_user_insert(&$edit, &$account, $category = NULL){
+	global $authdave_authenticated;
+	if($authdave_authenticated){
+		$email = mycompany_email_lookup($account->name);
+		
+		//Занесение адреса электронной почты для этого
+		// пользователя в таблицу users
+		db_update('users')
+			->fields(
+				array(
+					'mail' => $email,
+				)
+			)
+			->condition('uid', $account->uid)
+			->execute();
+	}
+}
+
+
+
+
+
+
+
+

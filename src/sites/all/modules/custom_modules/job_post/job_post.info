@@ -1,0 +1,6 @@
+name = Job Post
+description = Adds a custom field to node types job_post
+package = Pro Drupal Development
+core = 7.x
+files[] = job_post.install
+files[] = job_post.module

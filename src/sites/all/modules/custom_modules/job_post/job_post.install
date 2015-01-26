@@ -1,0 +1,141 @@
+﻿<?php
+
+/**
+*@file
+* Установочный файл для модуля Jop Post.
+*/
+
+/**
+* Реализация hook_install()
+*
+* -Добавление поля текста.
+* -Настройка поля текста.
+* -Создание поля с названием компании.
+*/
+function job_post_install(){
+	node_types_rebuild();
+	$types = node_type_get_types();
+	node_add_body_field($types['job_post']);
+
+	// Загрузка определения экземпляра для тела типа контента.
+	$body_instance = field_info_instance('node','body','job_post');
+
+	// Добавление режима отображения job_post_list в отображение экземпляра тела.
+	$body_instance['type'] = 'text_summary_or_trimmed';
+
+	// Сохранение изменений в экземлпяре поля тела.
+	field_update_instance($body_instance);
+
+	// Создание всех полей, добавленных в тип контента.
+	foreach(_job_post_installed_fields() as $field){
+		field_create_field($field);
+	}
+
+	// Создание всех             наших полей.
+	foreach(_job_post_installed_instances() as $instance){
+		$instance['entity_type'] = 'node';
+		$instance['bundle'] = 'job_post';
+		field_create_instance($instance);
+	}
+}
+
+/**
+* Возврат структурированного массива с определениями полей,
+* созданныз данным типом контента.
+*/
+function _job_post_installed_fields(){
+	$t = get_t();
+	return array(
+		'job_post_company' => array(
+			'field_name' => 'job_post_company',
+			'label' => $t('Company posting the job listing'),
+			'type' => 'text',
+		),
+	);
+}
+
+/**
+* Возврат структурированного массива с определениями полей,
+* c определениями экземпляров данного типа контента.
+*/
+function _job_post_installed_instances(){
+	$t = get_t();
+	return array(
+		'job_post_company' => array(
+			'field_name' => 'job_post_company',
+			'type' => 'text',
+			'label' => $t('Company posting the job listing'),
+			'widget' => array(
+				'type' => 'text_textfield',
+			),
+			'display' => array(
+				'job_post_list' => array(
+					'label' => $t('Company posting the job listing'),
+					'type' => 'text',
+				),
+			),
+		),
+	);
+}
+
+/**
+* Реализация hook_uninstall()
+*/
+function job_post_uninstall(){
+	// Сбор всего контента, который может быть создан при активации модуля.
+	$sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+	$result = db_query($sql, array(':type' => 'job_post'));
+	$nids = array();
+	foreach($result as $row){
+		$nids[] = $row->nid;
+	}
+	
+	// Одновременное удаление всех нод.
+	node_delete_multiple($nids);
+	
+	
+	// Проход в цикле по всем полям, определенным в данном модуле, и удаление
+	// всех экземпляров поля, их данных и самого поля.
+	foreach(array_keys(_job_post_installed_fields()) as $field){
+		field_delete_field($field);
+	}
+	
+	
+	// Проход в цикле по остальным экземплярам поля, прикрепленных к типу
+	// контента job_post (вроде поля тела), и поочередное их удаление.
+	$instances = field_info_instances('node','job_post');
+	foreach($instances as $instance_name => $instance){
+		field_delete_instance($instance);
+	}
+	
+	// Удаление типа контента.
+	node_type_delete('job_post');
+	
+	// Удаление информации о полях.
+	field_purge_bath(1000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

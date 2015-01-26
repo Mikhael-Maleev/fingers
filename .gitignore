@@ -1,0 +1,10 @@
+# Ignore tmp files
+*~
+# Ignore archives
+/*.zip
+# Ignore local backups folder
+backups/
+DB/
+# Ignore order xml files
+/src/sites/default/files/
+

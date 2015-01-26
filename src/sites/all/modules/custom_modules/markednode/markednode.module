@@ -1,0 +1,93 @@
+﻿<?php
+
+/**
+* Реализация hook_install()
+*/
+function markednode_install(){
+	$field = array(
+		'type' => 'int',
+		'unsigned' => TRUE,
+		'not null' => TRUE,
+		'default' => 0,
+		'initial' => 0, // Задает начальное значение для существовавших ранее нод.
+		'description' => t('Whether the node has been marked by the module.'),
+					//Помечена ли нода модулем markednode
+	);
+	// Создание обычного индекса 'marked' по полю 'marked'
+	$keys['indexes'] = array(
+		'marked' => array('marked')
+	);
+	db_add_field('node', 'marked', $field, $keys);
+}
+/**
+* Реализация hook_schema_alter(). Содержимое $schema изменяется по ссылке.
+*
+*@param $schema
+*  Cхема для всей системы, собранная drupal_get_schema().
+*/
+function markednode_schema_alter(&$schema){
+	// Добавление поля в существующую схему.
+	$schema['node']['fields']['marked'] = array(
+		'type' => 'int',
+		'unsigned' => TRUE,
+		'not null' => TRUE,
+		'default' => 0,
+		'initial' => 0, // Задает начальное значение для существовавших ранее нод.
+		'description' => t('Whether the node has been marked by the module.'),				//Помечена ли нода модулем markednode
+	);
+}
+/**
+* Действие Drupal - имитация гудка
+*/
+function beep_beep_action(){
+	beep_beep();
+}
+
+/**
+* Форма для конфигурируемого действия Drupal - выдачи нескольких звуковых сигналов.
+*/
+function beep_multiple_beep_action_form($context){
+	$form['beeps'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Number of beeps'), // Количество гудков
+		'#description' => t('Enter the number of times to beep then this actions executes'),
+		// Введите колличесво гудков при выполнении этого действия
+		'#default_value' => isset($context['beep']) ? $context['beeps'] : '1',
+		'#required' => TRUE,
+		);
+	return $form;		
+}
+/**
+* Валидаця данных отправленых формой
+*/
+function beep_multiple_beep_action_validate($form, $form_state){
+	$beeps = $form_state['values']['beeps'];
+		if (!is_numeric($beeps)){
+			form_set_error('beeps', t('Please enter a whole number between 0 and 10.'));
+			//Введите число от 0 до 10
+		}
+		else if ((int)$beeps > 10 ){
+			form_set_error('beeps', t('That would bee too annoying. Please choose fewer than 10 beeps.'));
+			// Это будет слишком занудно. Укажите менее 10 сигналов.
+		}
+		else if ((int)$beeps < 0 ){
+			form_set_error('beeps', t('That would likely create a black whole! Beeps must be a positive integer.'));
+			// Вы решили создать черную дыру? Колличество должно быть положтельным целым числом.
+		}
+}
+
+function beep_multiple_beep_action_submit($form, $form_state){
+	return array(
+		'beeps' => (int)$form_state['values']['beeps'],
+	);	
+}
+/**
+* Конфигурируемое дейсвие воспроизводит указанное колличество гудков.
+*/
+function beep_multiple_beep_action($object, $context){
+	for ($i=1; $i < $context('beeps'); $i++) {
+		beep_beep();
+	}
+}
+
+
