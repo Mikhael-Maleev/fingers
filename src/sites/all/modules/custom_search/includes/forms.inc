@@ -1,10 +1,16 @@
 <?php
+/**
+ * @file
+ * Search forms
+ */
 
 /**
  * Default admin form.
  */
 function _custom_search_default_admin_form($delta = '') {
-  if ($delta != '') $delta = 'blocks_' . $delta . '_';
+  if ($delta != '') {
+    $delta = 'blocks_' . $delta . '_';
+  }
 
   // Labels & default text.
   $form['search_box'] = array(
@@ -21,6 +27,11 @@ function _custom_search_default_admin_form($delta = '') {
     '#title'          => t('Search box label'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'label', CUSTOM_SEARCH_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for the search box. The default value is "!default".', array('!default' => CUSTOM_SEARCH_LABEL_DEFAULT)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_' . $delta . 'label_visibility"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   $form['search_box']['custom_search_' . $delta . 'text'] = array(
     '#type'           => 'textfield',
@@ -28,6 +39,24 @@ function _custom_search_default_admin_form($delta = '') {
     '#default_value'  => variable_get('custom_search_' . $delta . 'text', ''),
     '#description'    => t('This will change the default text inside the search form. Leave blank for no text. This field is blank by default.'),
   );
+  $form['search_box']['custom_search_' . $delta . 'hint_text'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Search box hint text'),
+    '#default_value'  => variable_get('custom_search_' . $delta . 'hint_text', CUSTOM_SEARCH_HINT_TEXT_DEFAULT),
+    '#description'    => t('Enter the text that will be displayed when hovering the input field (HTML <em>title</em> attritube).'),
+  );
+  if (module_exists('elements')) {
+    $form['search_box']['custom_search_' . $delta . 'element'] = array(
+      '#type'           => 'select',
+      '#title'          => t('Search box input type'),
+      '#options'        => array(
+        'textfield'   => 'text',
+        'searchfield' => 'search (HTML5)',
+      ),
+      '#default_value'  => variable_get('custom_search_' . $delta . 'element', 'textfield'),
+      '#description'    => t('The default value is "text".'),
+    );
+  }
   $form['search_box']['custom_search_' . $delta . 'size'] = array(
     '#type'           => 'textfield',
     '#title'          => t('Search box size'),
@@ -64,19 +93,19 @@ function _custom_search_default_admin_form($delta = '') {
   $form['submit_button']['custom_search_image'] = array(
     '#type'           => 'file',
     '#title'          => t('Submit image'),
-    '#description'    => t('If you don\'t have direct file access to the server, use this field to upload your image.'),
+    '#description'    => t("If you don't have direct file access to the server, use this field to upload your image."),
   );
 
   // Criteria.
   $form['criteria'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Advanced search criteria'),
+    '#collapsible'  => TRUE,
+    '#collapsed'    => TRUE,
   );
   $form['criteria']['or'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Or'),
-    '#collapsible'  => TRUE,
-    '#collapsed'    => TRUE,
   );
   $form['criteria']['or']['custom_search_' . $delta . 'criteria_or_display'] = array(
     '#type'           => 'checkbox',
@@ -88,12 +117,15 @@ function _custom_search_default_admin_form($delta = '') {
     '#title'          => t('Label'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'criteria_or_label', CUSTOM_SEARCH_CRITERIA_OR_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for this field. The default value is "!default".', array('!default' => CUSTOM_SEARCH_CRITERIA_OR_LABEL_DEFAULT)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_' . $delta . 'criteria_or_display"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   $form['criteria']['phrase'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Phrase'),
-    '#collapsible'  => TRUE,
-    '#collapsed'    => TRUE,
   );
   $form['criteria']['phrase']['custom_search_' . $delta . 'criteria_phrase_display'] = array(
     '#type'           => 'checkbox',
@@ -105,12 +137,15 @@ function _custom_search_default_admin_form($delta = '') {
     '#title'          => t('Label'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'criteria_phrase_label', CUSTOM_SEARCH_CRITERIA_PHRASE_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for this field. The default value is "!default".', array('!default' => CUSTOM_SEARCH_CRITERIA_PHRASE_LABEL_DEFAULT)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_' . $delta . 'criteria_phrase_display"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   $form['criteria']['negative'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Negative'),
-    '#collapsible'  => TRUE,
-    '#collapsed'    => TRUE,
   );
   $form['criteria']['negative']['custom_search_' . $delta . 'criteria_negative_display'] = array(
     '#type'           => 'checkbox',
@@ -122,7 +157,32 @@ function _custom_search_default_admin_form($delta = '') {
     '#title'          => t('Label'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'criteria_negative_label', CUSTOM_SEARCH_CRITERIA_NEGATIVE_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for this field. The default value is "!default".', array('!default' => CUSTOM_SEARCH_CRITERIA_NEGATIVE_LABEL_DEFAULT)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_' . $delta . 'criteria_negative_display"]' => array('checked' => TRUE),
+      ),
+    ),
   );
+
+  if (module_exists('search_api_page')) {
+    $search_api_pages = search_api_page_load_multiple();
+    $options[0] = t('None');
+    foreach ($search_api_pages as $page) {
+      $options[$page->id] = $page->name;
+    }
+    $form['searchapi'] = array(
+      '#type'         => 'fieldset',
+      '#title'        => t('Search API'),
+      '#collapsible'  => TRUE,
+      '#collapsed'    => TRUE,
+    );
+    $form['searchapi']['custom_search_' . $delta . 'search_api_page'] = array(
+      '#type'           => 'select',
+      '#title'          => t('Search API Page to use'),
+      '#options'        => $options,
+      '#default_value'  => variable_get('custom_search_' . $delta . 'search_api_page', 0),
+    );
+  }
 
   return $form;
 }
@@ -131,12 +191,14 @@ function _custom_search_default_admin_form($delta = '') {
  * Content admin form.
  */
 function _custom_search_content_admin_form($delta = '') {
-  if ($delta != '') $delta = 'blocks_' . $delta . '_';
+  if ($delta != '') {
+    $delta = 'blocks_' . $delta . '_';
+  }
 
   $form['content_selector'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Content selector'),
-    '#description'  => t('Select the search types to present as search options in the search block. If none is selected, no selector will be displayed. <strong>Note</strong>: if there\'s only one type checked, the selector won\'t be displayed BUT only this type will be searched.'),
+    '#description'  => t("Select the search types to present as search options in the search block. If none is selected, no selector will be displayed. <strong>Note</strong>: if there's only one type checked, the selector won't be displayed BUT only this type will be searched."),
   );
   $form['content_selector']['custom_search_' . $delta . 'node_types'] = array(
     '#type'           => 'checkboxes',
@@ -181,6 +243,11 @@ function _custom_search_content_admin_form($delta = '') {
     '#title'          => t('Label text'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'type_selector_label', CUSTOM_SEARCH_TYPE_SELECTOR_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for the selector. The default value is "!default".', array('!default' => CUSTOM_SEARCH_TYPE_SELECTOR_LABEL_DEFAULT)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_' . $delta . 'type_selector_label_visibility"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   $form['content_selector']['any'] = array(
     '#type'         => 'fieldset',
@@ -209,7 +276,7 @@ function _custom_search_content_admin_form($delta = '') {
   $form['custom_search_' . $delta . 'node_types_excluded'] = array(
     '#type'           => 'checkboxes',
     '#title'          => t('Content exclusion'),
-    '#description'    => t('Select the content types you don\'t want to be displayed as results.'),
+    '#description'    => t("Select the content types you don't want to be displayed as results."),
     '#default_value'  => variable_get('custom_search_' . $delta . 'node_types_excluded', array()),
     '#options'        => node_type_get_names(),
   );
@@ -221,7 +288,9 @@ function _custom_search_content_admin_form($delta = '') {
  * Custom paths admin form.
  */
 function _custom_search_custom_paths_admin_form($delta = '') {
-  if ($delta != '') $delta = 'blocks_' . $delta . '_';
+  if ($delta != '') {
+    $delta = 'blocks_' . $delta . '_';
+  }
   $form['custom_search_paths_admin'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Custom search paths'),
@@ -254,18 +323,20 @@ function _custom_search_custom_paths_admin_form($delta = '') {
     '#title'          => t('Paths'),
     '#default_value'  => variable_get('custom_search_' . $delta . 'paths', ''),
     '#rows'           => 3,
-    '#description'    => t('If you want to use custom search paths, enter them here in the form <em>path</em>|<em>label</em>, one per line (if only one path is specified, the selector will be hidden). The [key] token will be replaced by what is entered in the search box. Ie: mysearch/[key]|My custom search label.'),
+    '#description'    => t('If you want to use custom search paths, enter them here in the form <em>path</em>|<em>label</em>, one per line (if only one path is specified, the selector will be hidden). The [key] token will be replaced by what is entered in the search box. Ie: mysearch/[key]|My custom search label. The [current_path] token can be used to use the current URL path of the page beeing viewed.'),
   );
   return $form;
 }
 
 /**
- * Ordering admin form
+ * Ordering admin form.
  */
 function _custom_search_ordering_admin_form($delta = '') {
   drupal_add_css(drupal_get_path('module', 'custom_search') . '/custom_search.css');
 
-  if ($delta != '') $delta = 'blocks_' . $delta . '_';
+  if ($delta != '') {
+    $delta = 'blocks_' . $delta . '_';
+  }
   $form['order'] = array(
     '#type'         => 'fieldset',
     '#title'        => t('Elements ordering'),
@@ -284,8 +355,9 @@ function _custom_search_ordering_admin_form($delta = '') {
     'custom_paths'      => array('title' => t('Custom search paths'), 'default_weight' => 9),
     'submit_button'     => array('title' => t('Submit button'), 'default_weight' => 10),
   );
-  if (count(array_filter(array_merge(variable_get('custom_search_' . $delta . 'node_types', array()), variable_get('custom_search_' . $delta . 'other', array())))))
+  if (count(array_filter(array_merge(variable_get('custom_search_' . $delta . 'node_types', array()), variable_get('custom_search_' . $delta . 'other', array()))))) {
     $elements['content_types'] = array('title' => t('Content Types'), 'default_weight' => 0);
+  }
 
   foreach ($elements as $element => $data) {
     $form['order']['custom_search_' . $delta . 'order'][$element] = array(
@@ -295,16 +367,26 @@ function _custom_search_ordering_admin_form($delta = '') {
     $form['order']['custom_search_' . $delta . 'order'][$element]['sort'] = array(
       '#type'           => 'weight',
       '#default_value'  => variable_get('custom_search_' . $delta . $element . '_weight', $data['default_weight']),
-      '#attributes'     => array('class' => array('sort-select', 'sort-select-' . variable_get('custom_search_' . $delta . $element . '_region', 'block'))),
+      '#attributes'     => array(
+        'class' => array(
+          'sort-select',
+          'sort-select-' . variable_get('custom_search_' . $delta . $element . '_region', 'block'),
+        ),
+      ),
     );
     $form['order']['custom_search_' . $delta . 'order'][$element]['region'] = array(
       '#type'           => 'select',
       '#options'        => array(
         'block' => t('Block'),
-        'popup' => t('Popup')
+        'popup' => t('Popup'),
       ),
       '#default_value'  => variable_get('custom_search_' . $delta . $element . '_region', 'block'),
-      '#attributes'     => array('class' => array('region-select', 'region-select-' . variable_get('custom_search_' . $delta . $element . '_region', 'block'))),
+      '#attributes'     => array(
+        'class' => array(
+          'region-select',
+          'region-select-' . variable_get('custom_search_' . $delta . $element . '_region', 'block'),
+        ),
+      ),
     );
   }
   return $form;

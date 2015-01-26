@@ -32,6 +32,13 @@ function ocupload_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'max_filesize' => array(
+        'description' => 'Max filesize in bytes',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'template' => array(
         'description' => 'Template',
         'type' => 'varchar',
@@ -49,7 +56,14 @@ function ocupload_schema() {
       'image_style' => array(
         'description' => 'Image style',
         'type' => 'varchar',
-        'length' => 30,
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'image_style_original' => array(
+        'description' => 'Image style for original image',
+        'type' => 'varchar',
+        'length' => 50,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -57,27 +71,37 @@ function ocupload_schema() {
         'description' => 'Wrap template link to original image',
         'type' => 'int',
         'size' => 'tiny',
+        'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
+      ),
+      'link_template' => array(
+        'description' => 'Link template',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '<a href="!filepath" target="_blank">!image</a>',
       ),
       'link_only_big' => array(
         'description' => '1 - wrap template only big images, 0 - wrap all images',
         'type' => 'int',
         'size' => 'tiny',
+        'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
-      'show_in_colorbox' => array(
-        'description' => '1 - show original image in colorbox, 0 - open in new page',
-        'type' => 'int',
-        'size' => 'tiny',
+      'max_dimensions' => array(
+        'description' => 'Maximum image resolution',
+        'type' => 'varchar',
+        'length' => 20,
         'not null' => TRUE,
-        'default' => 0,
+        'default' => '',
       ),
       'rename_file' => array(
         'description' => '1 - change filename to unique number (datetime), 0 - not change',
         'type' => 'int',
         'size' => 'tiny',
+        'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 1,
       ),
@@ -99,12 +123,13 @@ function ocupload_install() {
       'mask' => 'jpg,jpeg,gif,png',
       'path' => 'images',
       'template' => '<img src="!filepath" alt="" />',
-      'template_select' => '<a href="!filepath" target="_blank">!text</a>',
+      'template_select' => module_exists('colorbox')
+        ? '<a href="!filepath" class="colorbox" target="_blank">!text</a>'
+        : '<a href="!filepath" target="_blank">!text</a>',
       'image_style' => 'large',
       'link_to_original' => 1,
       'link_only_big' => 1,
-      'show_in_colorbox' => module_exists('colorbox') ? 1 : 0,
-      'rename_file' => 1,
+      'rename_file' => 0,
     ),
     array(
       'mask' => 'rar,zip,doc,xls',
@@ -121,12 +146,12 @@ function ocupload_install() {
       'rename_file' => 0,
     ),
   );
-  
+
   foreach ($templates as $template) {
     $directory = 'public://' . $template['path'];
     file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
   }
-  
+
   ocupload_template_save($templates, TRUE);
 }
 
@@ -140,7 +165,7 @@ function ocupload_uninstall() {
 }
 
 /**
- * Add new col
+ * Add new col {ocupload_templates}.show_in_colorbox
  */
 function ocupload_update_7100() {
   db_add_field('ocupload_templates', 'show_in_colorbox', array(
@@ -153,7 +178,7 @@ function ocupload_update_7100() {
 }
 
 /**
- * Change col length
+ * Change col length {ocupload_templates}.path
  */
 function ocupload_update_7101() {
   db_change_field('ocupload_templates', 'path', 'path', array(
@@ -163,4 +188,72 @@ function ocupload_update_7101() {
     'not null' => TRUE,
     'default' => '',
   ));
+}
+
+/**
+ * Add new col {ocupload_templates}.image_style_original
+ */
+function ocupload_update_7102() {
+  db_add_field('ocupload_templates', 'image_style_original', array(
+    'description' => 'Image style for original image',
+    'type' => 'varchar',
+    'length' => 50,
+    'not null' => TRUE,
+    'default' => '',
+  ));
+}
+
+/**
+ * Add new col {ocupload_templates}.max_filesize
+ */
+function ocupload_update_7103() {
+  db_add_field('ocupload_templates', 'max_filesize', array(
+    'description' => 'Max filesize in bytes',
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+}
+
+/**
+ * Add new col {ocupload_templates}.max_dimensions
+ */
+function ocupload_update_7104() {
+  db_add_field('ocupload_templates', 'max_dimensions', array(
+    'description' => 'Maximum image resolution',
+    'type' => 'varchar',
+    'length' => 20,
+    'not null' => TRUE,
+    'default' => '',
+  ));
+}
+
+/**
+ * Add new col {ocupload_templates}.link_template
+ * Update colorbox integration
+ * Delete col {ocupload_templates}.show_in_colorbox
+ */
+function ocupload_update_7105() {
+  // Add field
+  db_add_field('ocupload_templates', 'link_template', array(
+    'description' => 'Link template',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '<a href="!filepath" target="_blank">!image</a>',
+  ));
+
+  // Update Colorbox integration
+  module_load_include('module', 'ocupload');
+  module_load_include('inc', 'ocupload');
+  foreach (ocupload_templates() as $template) {
+    if ($template->show_in_colorbox) {
+      $template->link_template = '<a href="!filepath" class="colorbox" target="_blank">!image</a>';
+      ocupload_template_save($template);
+    }
+  }
+
+  // Delete field
+  db_drop_field('ocupload_templates', 'show_in_colorbox');
 }

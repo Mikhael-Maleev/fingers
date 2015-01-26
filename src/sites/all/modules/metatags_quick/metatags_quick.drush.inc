@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @file nodewords_upgrade.drush.inc
- * Drush commands for metatags_quick migration from nodewords.
+ * @file metatags_quick.drush.inc
+ * Drush commands for metatags_quick.
  */
 
 /**
@@ -106,7 +106,7 @@ function drush_metatags_quick_migrate_fields($field_names) {
     'progress_message' => t('Completed :nodes_completed of :nodes_total', array(
       ':nodes_completed' => $_SESSION['nodewords_upgrade_processed'], ':nodes_total' => $_SESSION['nodewords_upgrade_total'])),
     'finished' => 'metatags_quick_upgrade_finished',
-    'file' => drupal_get_path('module', 'metatags_quick') . '/nodewords_upgrade.inc',
+    'file' => drupal_get_path('module', 'metatags_quick') . '/metatags_quick_import.admin.inc',
   );
 
   batch_set($batch);

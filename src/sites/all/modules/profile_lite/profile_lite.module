@@ -5,6 +5,8 @@
  * Profile Lite module.
  */
 
+define('PROFILE_LITE_DEFAULT_CATEGORY', 'account');
+
 /**
  * Implements hook_menu_alter().
  */
@@ -29,6 +31,9 @@ function profile_lite_permission() {
   // Generate per profile type permissions.
   foreach (ctools_export_crud_load_all('profile_lite_categories') as $category) {
     $name = check_plain($category->name);
+    if ($name == PROFILE_LITE_DEFAULT_CATEGORY) {
+      continue;
+    }
     $permissions += array(
       "edit own $name category" => array(
         'title' => t('%name: Edit own category', array('%name' => $category->label)),
@@ -55,7 +60,7 @@ function profile_lite_user_categories() {
 
   ctools_include('export');
   foreach (ctools_export_crud_load_all('profile_lite_categories') as $category) {
-    if (empty($category->fields)) {
+    if (empty($category->fields) || $category->name == PROFILE_LITE_DEFAULT_CATEGORY) {
       continue;
     }
 
@@ -89,29 +94,34 @@ function profile_lite_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
+ * Implements hook_ctools_plugin_api().
+ */
+function profile_lite_ctools_plugin_api($module, $api) {
+  if ($module == "profile_lite" && $api == "profile_lite_categories") {
+    return array("version" => "1");
+  }
+}
+
+/**
  * Implements hook_form_user_profile_form_alter().
  */
 function profile_lite_form_user_profile_form_alter(&$form, &$form_state) {
-  if ($form['#user_category'] == 'account') {
-    return;
-  }
   ctools_include('export');
   if ($category = ctools_export_crud_load('profile_lite_categories', $form['#user_category'])) {
-    $field_form = $form;
-    field_attach_form('user', $form['#user'], $field_form, $form_state);
-    foreach (element_children($field_form) as $field_name) {
-      if (empty($category->fields[$field_name])) {
-        unset($field_form[$field_name]);
-        if (isset($field_form['#group_children'][$field_name])) {
-          unset($field_form['#group_children'][$field_name]);
+    field_attach_form('user', $form['#user'], $form, $form_state);
+    $fields = field_info_instances('user', 'user');
+    foreach (element_children($form) as $field_name) {
+      if (isset($fields[$field_name]) && empty($category->fields[$field_name])) {
+        unset($form[$field_name]);
+        if (isset($form['#group_children'][$field_name])) {
+          unset($form['#group_children'][$field_name]);
         }
       }
       else {
         // Ignore weight for now.
-        //$field_form[$field_name]['#weight'] = $category->fields[$field_name]['weight'];
+        //$form[$field_name]['#weight'] = $category->fields[$field_name]['weight'];
       }
     }
-    $form += $field_form;
   }
 }
 
@@ -189,8 +199,10 @@ function profile_lite_category_save(stdClass $category) {
  * because we need to clear the menu cache after an item is deleted.
  */
 function profile_lite_category_delete(stdClass $category) {
+  // Calling features-revert --force can call this function on a record with no
+  // record_id (that is, not in the db). If this happens, simply return.
   if (empty($category->record_id)) {
-    throw new Exception(t('$category object must contain a record id to be deleted.'));
+    return FALSE;
   }
   db_delete('profile_lite_categories')
     ->condition('record_id', $category->record_id)

@@ -11,7 +11,7 @@
 function custom_search_admin() {
   // Basic settings.
   $form = _custom_search_default_admin_form();
-  // Custom search paths
+  // Custom search paths.
   $form = array_merge($form, _custom_search_custom_paths_admin_form());
   // Ordering.
   $form = array_merge($form, _custom_search_ordering_admin_form());
@@ -49,6 +49,9 @@ function custom_search_content_admin() {
   return system_settings_form(_custom_search_content_admin_form());
 }
 
+/**
+ * Results page settings.
+ */
 function custom_search_results_admin() {
   $form['custom_search_target'] = array(
     '#type'     => 'select',
@@ -69,16 +72,19 @@ function custom_search_results_admin() {
     '#title'          => t('Display basic search'),
     '#default_value'  => variable_get('custom_search_results_search', TRUE),
   );
-  $form['search_form']['advanced'] = array(
-    '#type'         => 'fieldset',
-    '#title'        => t('Advanced search'),
-    '#collapsible'  => TRUE,
-    '#collapsed'    => TRUE,
-  );
-  $form['search_form']['advanced']['custom_search_results_advanced_search'] = array(
+  $form['search_form']['custom_search_results_advanced_search'] = array(
     '#type'           => 'checkbox',
     '#title'          => t('Display advanced search'),
     '#default_value'  => variable_get('custom_search_results_advanced_search', TRUE),
+  );
+  $form['search_form']['advanced'] = array(
+    '#type'         => 'fieldset',
+    '#title'        => t('Advanced search'),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="custom_search_results_advanced_search"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   $form['search_form']['advanced']['custom_search_results_advanced_search_collapsible'] = array(
     '#type'           => 'checkbox',
@@ -126,6 +132,30 @@ function custom_search_results_admin() {
       '#title'          => $name,
       '#default_value'  => variable_get('custom_search_advanced_type_' . $type . '_display', TRUE),
     );
+  }
+
+  // Languages.
+  $language_options = array();
+  foreach (language_list('language') as $key => $entity) {
+    if ($entity->enabled) {
+      $language_options[$key] = $entity->name;
+    }
+  }
+  if (count($language_options) > 1) {
+    $form['search_form']['advanced']['languages'] = array(
+      '#type'         => 'fieldset',
+      '#title'        => t('Languages'),
+      '#description'  => t('Select the languages to display on the advanced search form.'),
+      '#collapsible'  => TRUE,
+      '#collapsed'    => TRUE,
+    );
+    foreach ($language_options as $key => $name) {
+      $form['search_form']['advanced']['languages']['custom_search_advanced_language_' . $key . '_display'] = array(
+        '#type'           => 'checkbox',
+        '#title'          => $name,
+        '#default_value'  => variable_get('custom_search_advanced_language_' . $key . '_display', TRUE),
+      );
+    }
   }
 
   $form['results'] = array(
@@ -176,6 +206,11 @@ function custom_search_results_admin() {
     '#title'          => t('Label text'),
     '#default_value'  => variable_get('custom_search_filter_label', CUSTOM_SEARCH_FILTER_LABEL_DEFAULT),
     '#description'    => t('Enter the label text for the list. The default value is "!default".', array('!default' => CUSTOM_SEARCH_FILTER_LABEL_DEFAULT)),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="custom_search_filter"]' => array('value' => 'disabled'),
+      ),
+    ),
   );
 
   return system_settings_form($form);

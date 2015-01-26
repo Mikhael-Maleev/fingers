@@ -144,12 +144,19 @@ function metatags_quick_convert_metatags($nids, $fields_to_import) {
         && !empty($nodewords_data[$node->nid][$field]['value'])) {
         $node_changed = TRUE;
         $meta_field_name = "meta_$field";
-        $node->{$meta_field_name}[$node->language][0]['metatags_quick'] = 
-         substr($nodewords_data[$node->nid][$field]['value'], 0, 255);
+        $langcode = empty($node->language) ? LANGUAGE_NONE : $node->language;
+        if (is_array($nodewords_data[$node->nid][$field]['value'])) {
+          $meta_field_value = implode(',', array_filter($nodewords_data[$node->nid][$field]['value']));
+        }
+        else {
+          $meta_field_value = $nodewords_data[$node->nid][$field]['value'];
+        }
+        $node->{$meta_field_name}[$langcode][0]['metatags_quick'] = substr($meta_field_value, 0, 255);
       }
     }
     if ($node_changed) {
-      node_save($node);
+      field_attach_presave('node', $node);
+      field_attach_update('node', $node);
     }
   }
 }

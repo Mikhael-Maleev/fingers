@@ -167,7 +167,7 @@
     <?php print render($title_suffix); ?>
     <?php if (!empty($tabs['#primary'])): ?><div class="tabs-wrapper clearfix"><?php print render($tabs); ?></div><?php endif; ?>
     <?php if ($action_links): ?><ul class="action-links"><?php print render($action_links); ?></ul><?php endif; ?>
-    <?php print render($page['content']);?>
+    <?php print render($page['content']); ?>
   </section> <!-- /#main -->
   </div>
 
@@ -236,7 +236,7 @@
         <div class="copyright"><?php print t('Copyright'); ?> &copy; <?php echo date("Y"); ?>, <?php print $site_name; ?>.</div>
       <?php endif; ?>
       <?php if (theme_get_setting('footer_credits', 'corporate')): ?>
-        <div class="credit"><?php print t('Developed by'); ?> <a href="http://www.devsaran.com" target="_blank">Devsaran</a>.</div>
+        <div class="credit"><?php print t('Designed by'); ?> <a href="http://www.devsaran.com">Devsaran</a>.</div>
       <?php endif; ?>
     </div>
    <?php endif; ?>

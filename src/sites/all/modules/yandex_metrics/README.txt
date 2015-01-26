@@ -14,7 +14,7 @@ Features:
     * Installing Yandex.Metrics counter code on your site (visibility settings for pages and user roles)
     * Authorizing of your site on Yandex services (through oAuth 2.0)
     * Reports and charts:
-        * Views, Visitors, New Visitors
+        * Page Views, Visitors, New Visitors
         * Traffic Sources
         * Popular Search Phrases
         * Popular Content
@@ -106,15 +106,7 @@ CONFIGURATION
    
    Please skip this step if you have already created a counter.
 
-4. Register your Yandex application. Use Yandex step-by-step guide [6]
-   to perform this step.
-   
-   Enter Callback URI for your Yandex application. 
-   Callback URI: http://YOUR_SITE_HOST_NAME/yandex_metrics/oauth
-   
-   Save your application Client ID and Client Secret for later usage.
-
-5. Go to the module settings page ("Administration >> Configuration >> System >> Yandex.Metrics") 
+4. Go to the module settings page ("Administration >> Configuration >> System >> Yandex.Metrics")
    There are three tabs: Counter Code, Authorization and Reports. To access any of these tabs users need
    the "administer Yandex.Metrics settings" permission.
 
@@ -126,6 +118,16 @@ CONFIGURATION
    
    Please skip this step if you have already added Yandex.Metrics counter code on your site pages 
    through another way.
+
+   Please skip next steps if you need nothing except installation of counter code.
+
+5. Register your Yandex application. Use Yandex step-by-step guide [6]
+   to perform this step.
+
+   Enter Callback URI for your Yandex application.
+   Callback URI: http://YOUR_SITE_HOST_NAME/yandex_metrics/oauth
+
+   Save your application Client ID and Client Secret for later usage.
 
 6. Application authorization. 
    Go to Authorization tab and paste application Client ID and Client Secret into the corresponding fields.
@@ -216,7 +218,7 @@ LINKS
     * Установка кода счетчика на сайт (настройка видимости для страниц и ролей пользователей)
 	* Авторизация сайта на сервисах Яндекса (используя oAuth 2.0)
 	* Отчеты и графики:
-        * Просмотры, посетители, новые посетители
+        * Просмотры страниц, посетители, новые посетители
         * Источники переходов
         * Популярные поисковые фразы
         * Популярное содержимое
@@ -225,7 +227,7 @@ LINKS
 
 Зависимости модуля
     * Google chart API [3]
-    * [Необязательно] Для поддержки интернационализованных доменных имен
+    * [Необязательно] Для поддержки интернационализированных доменных имен
       скачайте класс idna_convert, разработанный Matthias Sommerfeld, отсюда [10] и скопируйте его
       в 'sites/all/libraries/idna_convert/' или 'sites/name_of_your_site/libraries/idna_convert/'
       директорию установленного Drupal.
@@ -308,16 +310,8 @@ LINKS
    Сохраните сформированный Javascript код для того, чтобы использовать его далее.
    
    Пропустите этот шаг, если вы уже создали счетчик для вашего сайта.
-
-4. Зарегистрируйте Яндекс приложение. Используйте пошаговую инструкцию от Яндекс [6]
-   для выполнения этого шага.
    
-   Введите Callback URI для вашего Яндекс приложения. 
-   Callback URI: http://ИМЯ_ВАШЕГО_САЙТА/yandex_metrics/oauth
-   
-   Сохраните Id приложения и Пароль приложения для того, чтобы использовать его далее.
-   
-5. Перейдите на страницу настройки модуля ("Управление >> Настройка >> Система >> Yandex.Metrics") 
+4. Перейдите на страницу настройки модуля ("Управление >> Настройка >> Система >> Yandex.Metrics")
    На странице настроек есть три вкладки: Код счетчика, Авторизация и Отчеты. Для доступа к любой из этих
    вкладок пользователи нуждаются в разрешении "управлять Yandex.Metrics настройками".
    
@@ -329,6 +323,16 @@ LINKS
    
    Пропустите этот шаг, если вы уже добавили код счетчика Яндекс.Метрики на страницы вашего сайта 
    любым другим способом.
+
+   Пропустите следующие шаги, если вас не интересует ничего, кроме установки счетчика.
+
+5. Зарегистрируйте Яндекс приложение. Используйте пошаговую инструкцию от Яндекс [6]
+   для выполнения этого шага.
+
+   Введите Callback URI для вашего Яндекс приложения.
+   Callback URI: http://ИМЯ_ВАШЕГО_САЙТА/yandex_metrics/oauth
+
+   Сохраните Id приложения и Пароль приложения для того, чтобы использовать его далее.
    
 6. Авторизация приложения.
    Перейдите на вкладку Авторизация и вставьте Id приложения и Пароль приложения в соответствующие поля.

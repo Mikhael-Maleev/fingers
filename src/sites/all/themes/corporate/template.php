@@ -131,17 +131,3 @@ if (drupal_is_front_page()) {
     drupal_add_js(drupal_get_path('theme', 'corporate') . '/js/slider.js');
   }
 }
-
-/* // this is part of formexample_b module
- function corporate_example_text_field_theme_function($element) {
-    $class = "";
-    if(isset($element["#needs_validation"])) {
-    $class = " error";
-    }
-    $output = '<div id="MY-wrapper-' . $element['']["#id"] . '"
-    class="form-item"><input id="edit-example-text-field"
-    class="form-text' . $class . '" name="' . $element['']["#name"]
-    . ' "></div>';
-    return $output;
-    }
-	*/

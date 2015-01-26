@@ -117,23 +117,25 @@ function _webform_edit_date($component) {
  * Implements _webform_render_component().
  */
 function _webform_render_date($component, $value = NULL, $filter = TRUE) {
+  $node = isset($component['nid']) ? node_load($component['nid']) : NULL;
+
   $element = array(
     '#type' => 'date',
     '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
     '#weight' => $component['weight'],
-    '#description' => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
+    '#description' => $filter ? _webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
     '#required' => $component['mandatory'],
     '#start_date' => trim($component['extra']['start_date']),
     '#end_date' => trim($component['extra']['end_date']),
     '#year_textfield' => $component['extra']['year_textfield'],
-    '#default_value' => $filter ? _webform_filter_values($component['value'], NULL, NULL, NULL, FALSE) : $component['value'],
+    '#default_value' => $filter ? _webform_filter_values($component['value'], $node, NULL, NULL, FALSE) : $component['value'],
     '#timezone' => $component['extra']['timezone'],
     '#process' => array('webform_expand_date'),
     '#theme' => 'webform_date',
     '#theme_wrappers' => array('webform_element'),
     '#element_validate' => array('webform_validate_date'),
-    '#webform_component' => $component,
+    '#translatable' => array('title', 'description'),
   );
 
   if ($component['extra']['datepicker']) {
@@ -163,6 +165,10 @@ function webform_expand_date($element) {
     $timezone = $element['#timezone'] != 'user' ? NULL : 'user';
     $timestring = webform_strtodate('c', $element['#default_value'], $timezone);
     $element['#default_value'] = webform_date_array($timestring, 'date');
+  }
+  // Prevent an error in PHP 5.4 caused by core's treatment of the #value.
+  if (isset($element['#value'])) {
+    unset($element['#value']);
   }
 
   // Set defaults according to existing #default_value (set by Form API)
@@ -198,6 +204,8 @@ function webform_expand_date($element) {
         break;
     }
     unset($element[$type]['#value']);
+    $element[$type]['#title'] = $none;
+    $element[$type]['#title_display'] = 'invisible';
     $element[$type]['#default_value'] = isset($default_values[$type]) ? $default_values[$type] : NULL;
     $element[$type]['#options'] = array('' => $none) + $element[$type]['#options'];
   }
@@ -231,9 +239,9 @@ function webform_expand_date($element) {
 function theme_webform_date($variables) {
   $element = $variables['element'];
 
-  $element['year']['#attributes']['class'] = array('year');
-  $element['month']['#attributes']['class'] = array('month');
-  $element['day']['#attributes']['class'] = array('day');
+  $element['year']['#attributes']['class'][] = 'year';
+  $element['month']['#attributes']['class'][] = 'month';
+  $element['day']['#attributes']['class'][] = 'day';
 
   // Add error classes to all items within the element.
   if (form_get_error($element)) {
@@ -340,7 +348,7 @@ function _webform_display_date($component, $value, $format = 'html') {
     '#theme_wrappers' => $format == 'html' ? array('webform_element') : array('webform_element_text'),
     '#format' => $format,
     '#value' => $value,
-    '#webform_component' => $component,
+    '#translatable' => array('title'),
   );
 }
 

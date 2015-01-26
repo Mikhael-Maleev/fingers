@@ -12,6 +12,13 @@
 function webform_configure_form($form, &$form_state, $node) {
   $form['#attached']['library'][] = array('webform', 'admin');
 
+  $form['#node'] = $node;
+
+  $form['#submit'] = array(
+    'webform_configure_form_submit',
+    'webform_configure_form_submit_save',
+  );
+
   $form['nid'] = array(
     '#type' => 'value',
     '#value' => $node->nid,
@@ -223,10 +230,14 @@ function webform_configure_form($form, &$form_state, $node) {
   );
   /* End Advanced Settings Form */
 
-  $form['submit'] = array(
+  $form['actions'] = array(
+    '#type' => 'actions',
+    '#weight' => 300,
+  );
+
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
-    '#weight' => 300,
   );
 
   return $form;
@@ -272,7 +283,8 @@ function webform_configure_form_validate($form, &$form_state) {
  * Submit handler for webform_configure_form().
  */
 function webform_configure_form_submit($form, &$form_state) {
-  $node = node_load($form_state['values']['nid']);
+  // Edit the node by reference just to shorten it up.
+  $node = &$form['#node'];
 
   // Save the confirmation.
   $node->webform['confirmation'] = $form_state['values']['confirmation']['value'];
@@ -324,9 +336,16 @@ function webform_configure_form_submit($form, &$form_state) {
 
   // Set submit button text.
   $node->webform['submit_text'] = $form_state['values']['submit_text'];
+}
 
-  node_save($node);
-
+/**
+ * Submit handler for webform_configure_form() that saves the node.
+ *
+ * This is separate from webform_configure_form_submit() to allow other modules
+ * to add properties if needed into the $form['#node'] object before save.
+ */
+function webform_configure_form_submit_save($form, &$form_state) {
+  node_save($form['#node']);
   drupal_set_message(t('The form settings have been updated.'));
 }
 
@@ -336,7 +355,7 @@ function webform_configure_form_submit($form, &$form_state) {
 function theme_webform_advanced_redirection_form($variables) {
   $form = $variables['form'];
   // Add special class for setting the active radio button.
-  $form['redirect_url']['#attributes']['class'] = array('webform-set-active');
+  $form['redirect_url']['#attributes']['class'][] = 'webform-set-active';
 
   // Remove title and description for Redirect URL field.
   $form['redirect_url']['#title'] = NULL;
@@ -356,8 +375,8 @@ function theme_webform_advanced_redirection_form($variables) {
  */
 function theme_webform_advanced_submit_limit_form($variables) {
   $form = $variables['form'];
-  $form['submit_limit']['#attributes']['class'] = array('webform-set-active');
-  $form['submit_interval']['#attributes']['class'] = array('webform-set-active');
+  $form['submit_limit']['#attributes']['class'][] = 'webform-set-active';
+  $form['submit_interval']['#attributes']['class'][] = 'webform-set-active';
   // Remove div wrappers around limit options.
   $form['submit_limit']['#theme_wrappers'] = array();
   $form['submit_interval']['#theme_wrappers'] = array();
@@ -379,8 +398,8 @@ function theme_webform_advanced_submit_limit_form($variables) {
  */
 function theme_webform_advanced_total_submit_limit_form($variables) {
   $form = $variables['form'];
-  $form['total_submit_limit']['#attributes']['class'] = array('webform-set-active');
-  $form['total_submit_interval']['#attributes']['class'] = array('webform-set-active');
+  $form['total_submit_limit']['#attributes']['class'][] = 'webform-set-active';
+  $form['total_submit_interval']['#attributes']['class'][] = 'webform-set-active';
   // Remove div wrappers around limit options.
   $form['total_submit_limit']['#theme_wrappers'] = array();
   $form['total_submit_interval']['#theme_wrappers'] = array();

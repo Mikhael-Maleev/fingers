@@ -55,7 +55,8 @@ function yandex_metrics_menu() {
     'page callback'   => 'drupal_get_form',
     'page arguments'  => array('yandex_metrics_main_settings'),
     'title'           => 'Yandex.Metrics',
-    'type' => MENU_NORMAL_ITEM
+    'type' => MENU_NORMAL_ITEM,
+    'description'       => 'Integrate your site with Yandex.Metrics service.'
   );
   $items['admin/config/system/yandex_metrics/counter'] = array(
     'access arguments' => array('administer Yandex.Metrics settings'),
@@ -291,15 +292,14 @@ function _yandex_metrics_filter_to_date_range($filter) {
  * Menu callback; displays a Summary page containing reports and charts.
  */
 function yandex_metrics_report($filter = 'week') {
-  $counter_id = isset($_SESSION['yandex_metrics_counter_id']) ? $_SESSION['yandex_metrics_counter_id'] : 0;
-  // Make request once if yandex_metrics_counter_id session variable is not set.
-  if (empty($counter_id)) {
-    $counter_id = yandex_metrics_get_counter_for_current_site();
-    $_SESSION['yandex_metrics_counter_id'] = $counter_id;
-  }
+
+  $counter_id = yandex_metrics_get_counter_for_current_site();
 
   if (empty($counter_id)) {
-    drupal_set_message(t('Please create Yandex.Metrics counter for the site first and then try again. To create counter visit !ym_link', array('!ym_link' => l('http://metrika.yandex.ru/', 'http://metrika.yandex.ru/', array('attributes' => array('target' => '_blank'))))), 'error');
+    drupal_set_message(
+      t('Please create Yandex.Metrics counter for the site first. See more details !link.', array('!link' => l(t('here'), 'admin/config/system/yandex_metrics'))),
+        'error'
+    );
     return '';
   }
   
@@ -323,12 +323,19 @@ function yandex_metrics_report($filter = 'week') {
   drupal_add_css(drupal_get_path('module', 'yandex_metrics') . '/css/yandex_metrics.css');
   
   $output = '';
-  
-  $output .= drupal_render(drupal_get_form('yandex_metrics_filter_form'));
+
+  $form = drupal_get_form('yandex_metrics_filter_form');
+
+  $output .= drupal_render($form);
   
   $use_ajax = variable_get('yandex_metrics_use_ajax', FALSE);
   if ($use_ajax) {
-    drupal_add_js(array('yandex_metrics' => array('modulePath' => drupal_get_path('module', 'yandex_metrics'))), 'setting');
+    $js_settings = array(
+      'modulePath' => drupal_get_path('module', 'yandex_metrics'),
+      'cleanUrls' => variable_get('clean_url', 0)
+    );
+    drupal_add_js(array('yandex_metrics' => $js_settings), 'setting');
+
     drupal_add_js(drupal_get_path('module', 'yandex_metrics') . '/js/yandex_metrics.js');
     $output .= '<input type="hidden" id="yandex_metrics_counter_id" value="' . $counter_id . '" />';
     $output .= '<input type="hidden" id="yandex_metrics_filter" value="' . $filter . '" />';
@@ -405,7 +412,7 @@ function _yandex_metrics_search_phrases($counter_id, $filter) {
       break;
     }
     $percentage = round(100 * $value->visits / $phrases_totals_visits, 2);
-    $data[] = array($percentage, $value->phrase);
+    $data[] = array($percentage, check_plain($value->phrase));
     $i++;
   }
 
@@ -447,10 +454,11 @@ function _yandex_metrics_sources_chart($counter_id, $filter) {
     
   $i = 1;
   foreach ($summary->data as $value) {
-    $chart['#data'][] = !empty($value->visits) ? $value->visits : 0;
+    $name = check_plain($value->name);
+    $chart['#data'][] = (int) $value->visits;
     $chart['#labels'][] = $i; 
-    $chart['#legends'][] = $i . '. ' . $value->name . ' (' . round($value->visits * 100 / $sum) . '%' . ')';
-    $chart['#data_colors'][] = chart_unique_color('sources_' . $i);
+    $chart['#legends'][] = $i . '. ' . $name . ' (' . round($value->visits * 100 / $sum) . '%' . ')';
+    $chart['#data_colors'][] = chart_unique_color('sources_' . $i, 'yandex_metrics');
     $i++;
   }
 
@@ -489,10 +497,10 @@ function _yandex_metrics_visits_chart($counter_id, $filter) {
   $new_visitors = array();
 
   foreach ($visits->data as $value) {
-    $dates[] = $value->date;
-    $page_views[] = !empty($value->page_views) ? $value->page_views : 0;
-    $visitors[] = !empty($value->visitors) ? $value->visitors : 0;
-    $new_visitors[] = !empty($value->new_visitors) ? $value->new_visitors : 0;
+    $dates[] = check_plain($value->date);
+    $page_views[] = (int) $value->page_views;
+    $visitors[] = (int) $value->visitors;
+    $new_visitors[] = (int) $value->new_visitors;
   }
   
   $dates = array_reverse($dates);
@@ -502,7 +510,7 @@ function _yandex_metrics_visits_chart($counter_id, $filter) {
   
   $chart = array(
     '#chart_id' => 'chart_visits',
-    '#title' => chart_title(t('Views, Visitors, New Visitors'), '000000', 15),
+    '#title' => chart_title(t('Page Views, Visitors, New Visitors'), '000000', 15),
     '#type' => CHART_TYPE_BAR_V_GROUPED,
     '#size' => chart_size(500, 250),
     '#bar_size' => chart_bar_size(17, 3), 
@@ -526,7 +534,7 @@ function _yandex_metrics_visits_chart($counter_id, $filter) {
   $chart['#data_colors']['visitors'] = '008000'; // Green.
   $chart['#data_colors']['new_visitors'] = 'FF0000'; // Red.
   
-  $chart['#legends']['views'] = t('Views');
+  $chart['#legends']['views'] = t('Page Views');
   $chart['#legends']['visitors'] = t('Visitors');
   $chart['#legends']['new_visitors'] = t('New Visitors');
   
@@ -573,7 +581,10 @@ function _yandex_metrics_popular_content($counter_id, $filter) {
     if ($i > YANDEX_METRICS_POPULAR_CONTENT_COUNT) {
       break;
     }
-    $data[] = array(l($value->url, $value->url, array('attributes' => array('target' => '_blank'))), $value->page_views);
+
+    $page_views = (int) $value->page_views;
+
+    $data[] = array(l($value->url, $value->url, array('attributes' => array('target' => '_blank'))), $page_views);
     $i++;
   }
 
@@ -590,7 +601,7 @@ function yandex_metrics_main_settings() {
     '#title' => t('Counter Code'),
     '#type' => 'textarea',
     '#rows' => 10,
-    '#description' => t('Paste Yandex.Metrics counter code for your site here. You can generate such code at !ym_link.', array('!ym_link' => l('http://metrika.yandex.ru/', 'http://metrika.yandex.ru/', array('attributes' => array('target' => '_blank')))))
+    '#description' => t('Paste Yandex.Metrics counter code for your site here.')
   );
 
   $form['visibility'] = array(
@@ -683,7 +694,6 @@ function yandex_metrics_main_settings_submit($form, &$form_state) {
   variable_set('yandex_metrics_roles', $roles);
 
   drupal_set_message(t("The Counter Code settings has been saved successfully."));
-  drupal_goto('admin/config/system/yandex_metrics/authorization');
 }
 
 /**
@@ -708,9 +718,8 @@ function yandex_metrics_authorization() {
     '#title' => t('Client ID'),
     '#type' => 'textfield',
     '#required' => TRUE,
-    '#description' => t('Please register Yandex aplication at !app_register_link to get access to Yandex.Metrics service. Then enter your application client ID in this field. The full list of your Yandex applications is located !app_list_link.', 
-      array('!app_register_link' => l('https://oauth.yandex.ru/client/new', 'https://oauth.yandex.ru/client/new', array('attributes' => array('target' => '_blank'))), '!app_list_link' => l(t('here'), 'https://oauth.yandex.ru/client/my', array('attributes' => array('target' => '_blank')))))
-  );
+    '#description' => t('Enter your application client ID in this field.')
+    );
 
   $form['yandex_metrics_client_secret'] = array(
     '#default_value' => variable_get('yandex_metrics_client_secret', ''),
@@ -743,9 +752,20 @@ function yandex_metrics_authorization_submit($form, &$form_state) {
     return;
   }
 
-  $request_url = "https://oauth.yandex.ru/authorize?response_type=code&client_id=" . $client_id;
+  $request_url = 'https://oauth.yandex.ru/authorize';
+  $params = array(
+    'response_type' => 'code',
+    'client_id' => $client_id,
+  );
 
-  drupal_goto($request_url);
+  // Check for the overlay.
+  if (module_exists('overlay') && overlay_get_mode() == 'child') {
+    overlay_close_dialog($request_url, array('query' => $params, 'external' => TRUE));
+    overlay_deliver_empty_page();
+  }
+  else {
+    drupal_goto($request_url, array('query' => $params));
+  }
 }
 
 /**
@@ -756,7 +776,7 @@ function yandex_metrics_authorization_submit($form, &$form_state) {
 function yandex_metrics_oauth_callback() {
 
   if (empty($_GET['code'])) {
-    watchdog('yandex_metrics', 'The "code" parameter is empty.', WATCHDOG_WARNING);
+    watchdog('yandex_metrics', 'The "code" parameter is empty.', array(), WATCHDOG_WARNING);
     drupal_set_message(t('An error has occurred. Please try again.'), 'error');
     drupal_goto('admin/config/system/yandex_metrics/authorization');
   }
@@ -813,11 +833,16 @@ function yandex_metrics_retreive_data($service_uri, $parameters = array(), $resu
  * Gets counter ID for the current site from Yandex.Metrics.
  */
 function yandex_metrics_get_counter_for_current_site() {
+
+  $counter_id = variable_get('yandex_metrics_counter_id', '');
+  if (!empty($counter_id)) {
+    return $counter_id;
+  }
+
   $result = yandex_metrics_retreive_data('/counters', array('field' => 'mirrors'));
 
   if (isset($result->error)) {
     watchdog('yandex_metrics', 'Counters request seems to be fail, due to "%error".', array('%error' => $result->code . ' ' . $result->error), WATCHDOG_WARNING);
-    drupal_set_message(t('An error has occurred.'), 'error');
     return;
   }
 
@@ -834,11 +859,13 @@ function yandex_metrics_get_counter_for_current_site() {
 
   foreach ($counters->counters as $key => $counter) {
     if ($counter->site == $current_host) {
+      variable_set('yandex_metrics_counter_id', $counter->id);
       return $counter->id;
     } 
     
     // If current host is equal of any site mirror.
     if (isset($counter->mirrors) && in_array($current_host, $counter->mirrors)) {
+      variable_set('yandex_metrics_counter_id', $counter->id);
       return $counter->id;
     }
   }
@@ -938,12 +965,13 @@ function yandex_metrics_show_counter_for_role() {
 
 /**
  * Fetch Popuplar content from Yandex.metrika and save it to the database.
+ * @param bool $cron - Indicates that we run function in cron or another place.
  */
-function yandex_metrics_save_popular_content() {
+function yandex_metrics_save_popular_content($cron = FALSE) {
   $counter_code = variable_get('yandex_metrics_counter_code', '');
-  if (empty($counter_code)) {
+  if (empty($counter_code) && !$cron) {
     drupal_set_message(
-      t('Perhaps you have not yet placed Yandex.Metrics counter code on the site. You can do this !link.', array('!link' => l(t('here'), 'admin/settings/yandex_metrics'))), 
+      t('Perhaps you have not yet placed Yandex.Metrics counter code on the site. You can do this !link.', array('!link' => l(t('here'), 'admin/settings/yandex_metrics'))),
       'notice'
     );
     return;
@@ -951,16 +979,30 @@ function yandex_metrics_save_popular_content() {
 
   $counter_id = yandex_metrics_get_counter_for_current_site();
   if (empty($counter_id)) {
-    drupal_set_message(t('Please create Yandex.Metrics counter for the site first and then try again. To create counter visit !ym_link', array('!ym_link' => l('http://metrika.yandex.ru/', 'http://metrika.yandex.ru/', array('attributes' => array('target' => '_blank'))))), 'error');
+    if ($cron) {
+      watchdog('yandex_metrics', 'Cron: counter ID is not set.', array(), WATCHDOG_WARNING);
+    }
+    else {
+      drupal_set_message(
+        t('Please create Yandex.Metrics counter for the site first. See more details !link.', array('!link' => l(t('here'), 'admin/config/system/yandex_metrics'))),
+        'error'
+      );
+    }
     return;
   }
   
   $authorisation_token = variable_get('yandex_metrics_auth_token', '');
   if (empty($authorisation_token)) {
-    drupal_set_message(
-      t('Please make sure that your application is authorized !link.', array('!link' => l(t('here'), 'admin/settings/yandex_metrics/authorization'))), 
-      'error'
-    );
+    if ($cron) {
+      watchdog('yandex_metrics', 'Cron: application is not authorised.', array(), WATCHDOG_WARNING);
+    }
+    else {
+      drupal_set_message(
+        t('Please make sure that your application is authorized !link.', array('!link' => l(t('here'), 'admin/settings/yandex_metrics/authorization'))),
+        'error'
+      );
+    }
+
     return;
   }  
  
@@ -995,7 +1037,7 @@ function yandex_metrics_save_popular_content() {
 
         if ($path == '') {
           // If path alias is empty than it's the Front page.
-          $page_title = variable_get('site_name', 'Front page');
+          $page_title = variable_get('site_name', t('Front page'));
         }
         else {
           // Convert path alias to internal Drupal path.
@@ -1040,7 +1082,12 @@ function yandex_metrics_save_popular_content() {
  * Implementation of hook_cron().
  */
 function yandex_metrics_cron() {
-  yandex_metrics_save_popular_content();
+  // Skip cron execution if Popular Content block is not enabled.
+  if (!_yandex_metrics_is_popular_content_enabled()) {
+    return;
+  }
+
+  yandex_metrics_save_popular_content(TRUE);
 }
 
 /**
@@ -1081,6 +1128,7 @@ function yandex_metrics_ajax($counter_id, $filter, $type) {
  * @return array
  */
 function yandex_metrics_reports() {
+
   $form = array();
 
   $form['yandex_metrics_use_ajax'] = array(
@@ -1097,7 +1145,7 @@ function yandex_metrics_reports() {
 
   $form['reports']['yandex_metrics_visits_chart_visible'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Views, Visitors, New Visitors'),
+    '#title' => t('Page Views, Visitors, New Visitors'),
     '#default_value' => variable_get('yandex_metrics_visits_chart_visible', TRUE),
   );
   $form['reports']['yandex_metrics_sources_chart_visible'] = array(
@@ -1168,8 +1216,7 @@ function _yandex_metrics_geo_chart($counter_id, $filter) {
   $i = 1;
   $sum_visits = 0;
   foreach ($geo->data as $value) {
-
-    $visits = !empty($value->visits) ? $value->visits : 0;
+    $visits = (int) $value->visits;
 
     if ($i > 10) {
         $others_visits = $total_visits - $sum_visits;
@@ -1184,8 +1231,9 @@ function _yandex_metrics_geo_chart($counter_id, $filter) {
 
     $sum_visits += $visits;
 
+    $name = check_plain($value->name);
     $chart['#data'][] = $visits;
-    $chart['#labels'][] = $value->name . ' (' . round($visits * 100 / $total_visits, 1) . '%' . ')';
+    $chart['#labels'][] = $name . ' (' . round($visits * 100 / $total_visits, 1) . '%' . ')';
 
     $chart['#data_colors'][] = chart_unique_color('geo_' . $i, 'yandex_metrics');
     $i++;
@@ -1265,4 +1313,50 @@ function _yandex_metrics_idna_decode($domain) {
   $IDN = new idna_convert();
 
   return $IDN->decode($domain);
+}
+
+/**
+ * Implementation of hook_help.
+ */
+function yandex_metrics_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#yandex_metrics':
+      $output = '';
+      $output .= '<h3>' . t('About the module') . '</h3>';
+      $output .= '<p>' . t('The <a href="@yandex_metrika" target="_blank">Yandex.Metrics</a> service is European alternative of Google Analytics. This is a free tool that helps you to increase the conversion rate of your site.', array('@yandex_metrika' => 'http://metrika.yandex.ru/')) . '</p>';
+      $output .= '<p>' . t('The Yandex.Metrics module allows to integrate your site with <a href="@yandex_metrika" target="_blank">Yandex.Metrics</a> service. You can install counter code on the site pages, authorize the site on Yandex and view basic reports by key effectiveness indicators.', array('@yandex_metrika' => 'http://metrika.yandex.ru/')) . '</p>';
+      $output .= '<h3>' . t('Usage') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Installing counter') . '</dt>';
+      $output .= '<dd>' . t('Yandex.Metrics counter is JavaScript code that monitors user behavior on your website. You should <a href="@create_counter" target="_blank">create</a> and <a href="@install_counter">install</a> the counter to work with Yandex.Metrics service.', array('@create_counter' => 'http://metrika.yandex.ru/', '@install_counter' => url('admin/config/system/yandex_metrics'))) . '</dd>';
+      $output .= '<dt>' . t('Authorizing site') . '</dt>';
+      $output .= '<dd>' . t('To get access to the <a href="@reports-url">reports</a> register Yandex application at !app_register_link. Then enter your application Client ID and Client Secret in the appropriate fields on the <a href="@authorization-page">Authorization</a> page. The full list of your Yandex applications is located !app_list_link.', array('!app_register_link' => l('https://oauth.yandex.ru/client/new', 'https://oauth.yandex.ru/client/new', array('attributes' => array('target' => '_blank'))), '!app_list_link' => l(t('here'), 'https://oauth.yandex.ru/client/my', array('attributes' => array('target' => '_blank'))), '@reports-url' => url('admin/reports/yandex_metrics_summary'), '@authorization-page' => url('admin/config/system/yandex_metrics/authorization'))) . '</dd>';
+      $output .= '<dt>' . t('Configuring reports') . '</dt>';
+      $output .= '<dd>' . t('You can choose necessary reports <a href="@report-setting-page">here</a> to display on <a href="@summary-report-page">Yandex.Metrics Summary Report</a> page. Also, we recommend you to enable AJAX for reports by checking appropriate field on the <a href="@report-setting-page">report settings page</a>.', array('@summary-report-page' => url('admin/reports/yandex_metrics_summary'), '@report-setting-page' => url('admin/config/system/yandex_metrics/reports'))) . '</dd>';
+      $output .= '</dl>';
+      return $output;
+    case 'admin/config/system/yandex_metrics':
+      $output = '<p>' . t('Yandex.Metrics counter is JavaScript code that monitors user behavior on your website. You should <a href="@create_counter" target="_blank">create</a> and install the counter code to work with Yandex.Metrics service.', array('@create_counter' => 'http://metrika.yandex.ru/')) . '</p>';
+      return $output;
+    case 'admin/config/system/yandex_metrics/authorization':
+      $output = '<p>' . t('To get access to the <a href="@reports-url">reports</a> register Yandex application at !app_register_link. Then enter your application Client ID and Client Secret in the appropriate fields on this page. The full list of your Yandex applications is located !app_list_link.', array('!app_register_link' => l('https://oauth.yandex.ru/client/new', 'https://oauth.yandex.ru/client/new', array('attributes' => array('target' => '_blank'))), '!app_list_link' => l(t('here'), 'https://oauth.yandex.ru/client/my', array('attributes' => array('target' => '_blank'))), '@reports-url' => url('admin/reports/yandex_metrics_summary'))) . '</p>';
+      $output .= '<p>' . t('Your Yandex application Callback URI: @callback-uri', array('@callback-uri' => url('yandex_metrics/oauth', array('absolute' => TRUE)))) . '</p>';
+      return $output;
+    case 'admin/config/system/yandex_metrics/reports':
+      return '<p>' . t('You can choose necessary reports to display on <a href="@summary-report-page">Yandex.Metrics Summary Report</a> page. Also, we recommend you to enable AJAX for reports by checking the appropriate field on this page.', array('@summary-report-page' => url('admin/reports/yandex_metrics_summary'))) . '</p>';
+  }
+}
+
+/*
+ * Check whether Popular Content block is enabled.
+ */
+function _yandex_metrics_is_popular_content_enabled() {
+  $result = db_select("block")
+    ->condition("module", "yandex_metrics")
+    ->condition("delta", "popular_content")
+    ->condition("status", 1)
+    ->fields('block')
+    ->execute()->fetchField();;
+
+  return !empty($result);
 }

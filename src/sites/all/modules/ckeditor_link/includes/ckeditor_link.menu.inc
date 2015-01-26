@@ -8,7 +8,7 @@
 /**
  * Implementation of hook_ckeditor_link_TYPE_autocomplete().
  */
-function ckeditor_link_ckeditor_link_menu_autocomplete($string) {
+function ckeditor_link_ckeditor_link_menu_autocomplete($string, $limit) {
   $matches = array();
 
   $menus = array_keys(array_filter(variable_get('ckeditor_link_autocomplete_menus', array())));
@@ -19,7 +19,7 @@ function ckeditor_link_ckeditor_link_menu_autocomplete($string) {
       ->condition('hidden', 0)
       ->condition('external', 0)
       ->orderBy('link_title')
-      ->range(0, 10);
+      ->range(0, $limit);
     if (function_exists('ckeditor_link_ckeditor_link_i18n_menu_autocomplete')) {
       $query->fields('menu_links', array('language'));
     }
@@ -51,12 +51,13 @@ function ckeditor_link_ckeditor_link_menu_revert($path, &$langcode) {
   }
 
   $router_item = menu_get_item($path);
-  if ($router_item && $router_item['access']) {
+  if ($router_item) {
+    if (!$router_item['access']) {
+      return FALSE;
+    }
     $link_title = db_query("SELECT link_title FROM {menu_links} WHERE link_path = :link_path AND hidden = 0 ORDER BY customized DESC", array(':link_path' => $path))->fetchField();
     return ($link_title) ? $link_title : NULL;
   }
-
-  return FALSE;
 }
 
 /**
